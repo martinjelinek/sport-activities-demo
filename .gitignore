@@ -8,3 +8,6 @@
 .externalNativeBuild
 .cxx
 local.properties
+
+# Implementation plan kept locally only
+2026-*-sport-activities-demo.md
