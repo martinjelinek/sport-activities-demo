@@ -20,4 +20,4 @@ dependencyResolutionManagement {
 }
 
 rootProject.name = "Sport Activities Demo"
-include(":app")
+include(":app", ":domain", ":data", ":ui")
