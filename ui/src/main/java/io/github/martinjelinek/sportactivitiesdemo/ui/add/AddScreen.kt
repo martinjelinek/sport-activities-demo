@@ -37,6 +37,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
@@ -94,14 +95,18 @@ fun AddScreen(
                 onValueChange = { viewModel.onEvent(AddScreenEvent.NameChanged(it)) },
                 label = { Text(stringResource(R.string.add_field_name)) },
                 singleLine = true,
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .testTag(AddScreenTestTags.NAME_FIELD),
             )
             OutlinedTextField(
                 value = state.location,
                 onValueChange = { viewModel.onEvent(AddScreenEvent.LocationChanged(it)) },
                 label = { Text(stringResource(R.string.add_field_location)) },
                 singleLine = true,
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .testTag(AddScreenTestTags.LOCATION_FIELD),
             )
 
             OutlinedButton(
@@ -149,7 +154,9 @@ fun AddScreen(
             Button(
                 onClick = { viewModel.onEvent(AddScreenEvent.Save) },
                 enabled = state.isSavable,
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .testTag(AddScreenTestTags.SAVE_BUTTON),
             ) {
                 Text(
                     if (state.isSubmitting) stringResource(R.string.add_button_saving)
@@ -274,3 +281,12 @@ private fun combineDateAndTime(dateUtcMillis: Long, hour: Int, minute: Int): Lon
 
 private fun formatTimestamp(epochMillis: Long): String =
     SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefault()).format(Date(epochMillis))
+
+// Stable test identifiers for the screen — decoupled from displayed text so
+// translations and copy edits don't break UI tests. `internal` so the :ui
+// androidTest source set can reach them without re-exporting publicly.
+internal object AddScreenTestTags {
+    const val NAME_FIELD = "add_name_field"
+    const val LOCATION_FIELD = "add_location_field"
+    const val SAVE_BUTTON = "add_save_button"
+}
