@@ -30,7 +30,6 @@ import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.material3.rememberTimePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -41,7 +40,9 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
+import androidx.annotation.StringRes
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.martinjelinek.sportactivitiesdemo.domain.model.StorageType
 import io.github.martinjelinek.sportactivitiesdemo.ui.R
 import java.text.SimpleDateFormat
@@ -57,8 +58,9 @@ fun AddScreen(
     onNavigateBack: () -> Unit,
     viewModel: AddScreenViewModel = hiltViewModel(),
 ) {
-    val state by viewModel.state.collectAsState()
+    val state by viewModel.state.collectAsStateWithLifecycle()
     var pickerTarget by remember { mutableStateOf<PickerTarget?>(null) }
+    val storageTypes = remember { StorageType.entries }
 
     LaunchedEffect(state.savedTo) {
         state.savedTo?.let {
@@ -139,13 +141,13 @@ fun AddScreen(
                 text = stringResource(R.string.add_storage_label),
                 modifier = Modifier.padding(top = 8.dp),
             )
-            StorageType.entries.forEach { type ->
+            storageTypes.forEach { type ->
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     RadioButton(
                         selected = state.storage == type,
                         onClick = { viewModel.onEvent(AddScreenEvent.StorageChanged(type)) },
                     )
-                    Text(type.label())
+                    Text(stringResource(type.labelRes()))
                 }
             }
 
@@ -185,10 +187,10 @@ fun AddScreen(
     }
 }
 
-@Composable
-private fun StorageType.label(): String = when (this) {
-    StorageType.LOCAL -> stringResource(R.string.storage_local)
-    StorageType.REMOTE -> stringResource(R.string.storage_remote)
+@StringRes
+private fun StorageType.labelRes(): Int = when (this) {
+    StorageType.LOCAL -> R.string.storage_local
+    StorageType.REMOTE -> R.string.storage_remote
 }
 
 private enum class PickerTarget { Started, Ended }
@@ -279,8 +281,14 @@ private fun combineDateAndTime(dateUtcMillis: Long, hour: Int, minute: Int): Lon
     }.timeInMillis
 }
 
+// Hoisted to file scope so we don't reconstruct the formatter on each call
+// from the composition body. Only ever read from the Main thread (composable
+// scope), so SimpleDateFormat's lack of thread-safety isn't a concern here.
+private val TIMESTAMP_FORMATTER: SimpleDateFormat =
+    SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefault())
+
 private fun formatTimestamp(epochMillis: Long): String =
-    SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefault()).format(Date(epochMillis))
+    TIMESTAMP_FORMATTER.format(Date(epochMillis))
 
 // Stable test identifiers for the screen — decoupled from displayed text so
 // translations and copy edits don't break UI tests. `internal` so the :ui
