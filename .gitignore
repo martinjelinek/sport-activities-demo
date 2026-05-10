@@ -11,3 +11,6 @@ local.properties
 
 # Implementation plan kept locally only
 2026-*-sport-activities-demo.md
+
+# Per-developer Firebase project config — reviewers bring their own.
+app/google-services.json
