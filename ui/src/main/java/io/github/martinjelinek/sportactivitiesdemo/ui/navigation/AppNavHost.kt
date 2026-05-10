@@ -21,12 +21,7 @@ fun AppNavHost(navController: NavHostController = rememberNavController()) {
         }
         composable<Route.Add> {
             AddScreen(
-                onSaved = { storage ->
-                    navController.previousBackStackEntry
-                        ?.savedStateHandle
-                        ?.set(KEY_SAVED_TO, storage.name)
-                    navController.popBackStack()
-                },
+                onSaved = { storage -> navController.deliverResultAndGoBack(KEY_SAVED_TO, storage.name) },
                 onNavigateBack = { navController.popBackStack() },
             )
         }
