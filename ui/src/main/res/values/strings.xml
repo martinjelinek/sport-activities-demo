@@ -1,0 +1,5 @@
+<resources>
+    <string name="storage_local">Local</string>
+    <string name="storage_remote">Remote</string>
+    <string name="filter_all">All</string>
+</resources>
