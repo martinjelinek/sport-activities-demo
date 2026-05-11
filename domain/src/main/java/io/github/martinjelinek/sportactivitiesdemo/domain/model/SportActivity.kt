@@ -5,6 +5,7 @@ enum class StorageType { LOCAL, REMOTE }
 data class SportActivity(
     val id: String,
     val name: String,
+    val location: String,
     val startedAt: Long,
     val endedAt: Long,
     val storage: StorageType,

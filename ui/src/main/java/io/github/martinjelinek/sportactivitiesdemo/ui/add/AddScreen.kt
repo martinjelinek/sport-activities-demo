@@ -22,6 +22,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -140,6 +141,7 @@ private fun AddScreenContent(
 ) {
     val storageTypes = remember { StorageType.entries }
     val onSportSelect = remember(onEvent) { { sport: SportType -> onEvent(AddScreenEvent.SportSelected(sport)) } }
+    val onLocationChange = remember(onEvent) { { value: String -> onEvent(AddScreenEvent.LocationChanged(value)) } }
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -181,6 +183,14 @@ private fun AddScreenContent(
                 style = MaterialTheme.typography.bodySmall,
             )
         }
+
+        OutlinedTextField(
+            value = state.location,
+            onValueChange = onLocationChange,
+            label = { Text(stringResource(R.string.add_location_label)) },
+            singleLine = true,
+            modifier = Modifier.fillMaxWidth(),
+        )
 
         Text(
             text = stringResource(R.string.add_storage_label),

@@ -40,6 +40,7 @@ class AddScreenViewModel @Inject constructor(
     fun onEvent(event: AddScreenEvent) {
         when (event) {
             is AddScreenEvent.SportSelected -> _state.update { it.copy(sport = event.value) }
+            is AddScreenEvent.LocationChanged -> _state.update { it.copy(location = event.value) }
             is AddScreenEvent.StartedAtChanged -> _state.update { it.copy(startedAt = event.value) }
             is AddScreenEvent.EndedAtChanged -> _state.update { it.copy(endedAt = event.value) }
             is AddScreenEvent.StorageChanged -> _state.update { it.copy(storage = event.value) }
@@ -57,6 +58,7 @@ class AddScreenViewModel @Inject constructor(
             val sportActivity = SportActivity(
                 id = idGenerator.next(),
                 name = sport.name,
+                location = s.location,
                 startedAt = s.startedAt,
                 endedAt = s.endedAt,
                 storage = s.storage,
@@ -68,12 +70,6 @@ class AddScreenViewModel @Inject constructor(
                     _effects.send(AddScreenEffect.Saved(s.storage))
                 }
                 .onFailure { e -> _state.update { it.copy(isSubmitting = false, errorMessage = e.message) } }
-        }
-    }
-
-    private fun isSavable(): Boolean {
-        with (_state.value) {
-            return sport != null && endedAt > startedAt && !isSubmitting
         }
     }
 

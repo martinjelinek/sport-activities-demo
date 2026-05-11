@@ -18,6 +18,7 @@
     <string name="add_started_at">Started at: %1$s</string>
     <string name="add_ended_at">Ended at: %1$s</string>
     <string name="add_end_before_start_error">End time must be after start time</string>
+    <string name="add_location_label">Location</string>
     <string name="add_storage_label">Storage</string>
     <string name="add_button_save">Save</string>
     <string name="add_button_saving">Saving…</string>

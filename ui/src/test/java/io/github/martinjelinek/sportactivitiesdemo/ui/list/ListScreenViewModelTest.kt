@@ -30,6 +30,7 @@ class ListScreenViewModelTest {
     private val item = SportActivity(
         id = "id-1",
         name = "Run",
+        location = "",
         startedAt = 0L, endedAt = 1000L,
         storage = StorageType.LOCAL,
         createdAt = 0L,

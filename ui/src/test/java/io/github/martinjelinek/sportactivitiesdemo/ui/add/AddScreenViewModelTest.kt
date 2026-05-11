@@ -61,6 +61,7 @@ class AddScreenViewModelTest {
         val vm = newVm()
         vm.effects.test {
             vm.onEvent(AddScreenEvent.SportSelected(SportType.RUN))
+            vm.onEvent(AddScreenEvent.LocationChanged("Stromovka"))
             vm.onEvent(AddScreenEvent.StorageChanged(StorageType.REMOTE))
             vm.onEvent(AddScreenEvent.Save)
 
@@ -70,6 +71,7 @@ class AddScreenViewModelTest {
 
         coVerify { repo.save(any()) }
         assertThat(captured.captured.name).isEqualTo(SportType.RUN.name)
+        assertThat(captured.captured.location).isEqualTo("Stromovka")
         assertThat(captured.captured.storage).isEqualTo(StorageType.REMOTE)
         assertThat(captured.captured.id).isEqualTo(FIXED_ID)
         assertThat(captured.captured.createdAt).isEqualTo(FIXED_NOW)

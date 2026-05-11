@@ -9,6 +9,7 @@ import io.github.martinjelinek.sportactivitiesdemo.domain.model.StorageType
 data class SportActivityEntity(
     @PrimaryKey val id: String,
     val name: String,
+    val location: String,
     val startedAt: Long,
     val endedAt: Long,
     val createdAt: Long,
@@ -17,6 +18,7 @@ data class SportActivityEntity(
 fun SportActivityEntity.toDomain() = SportActivity(
     id = id,
     name = name,
+    location = location,
     startedAt = startedAt,
     endedAt = endedAt,
     storage = StorageType.LOCAL,
@@ -26,6 +28,7 @@ fun SportActivityEntity.toDomain() = SportActivity(
 fun SportActivity.toEntity() = SportActivityEntity(
     id = id,
     name = name,
+    location = location,
     startedAt = startedAt,
     endedAt = endedAt,
     createdAt = createdAt,
