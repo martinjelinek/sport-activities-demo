@@ -69,7 +69,7 @@ class AddScreenViewModelTest {
         }
 
         coVerify { repo.save(any()) }
-        assertThat(captured.captured.name).isEqualTo(SportType.RUN.displayName)
+        assertThat(captured.captured.name).isEqualTo(SportType.RUN.name)
         assertThat(captured.captured.storage).isEqualTo(StorageType.REMOTE)
         assertThat(captured.captured.id).isEqualTo(FIXED_ID)
         assertThat(captured.captured.createdAt).isEqualTo(FIXED_NOW)

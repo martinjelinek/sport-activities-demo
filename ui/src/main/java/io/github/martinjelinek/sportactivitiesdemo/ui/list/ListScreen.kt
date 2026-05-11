@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.annotation.StringRes
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -34,6 +35,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.martinjelinek.sportactivitiesdemo.domain.model.SportActivity
+import io.github.martinjelinek.sportactivitiesdemo.domain.model.SportType
 import io.github.martinjelinek.sportactivitiesdemo.domain.model.StorageType
 import io.github.martinjelinek.sportactivitiesdemo.ui.R
 import io.github.martinjelinek.sportactivitiesdemo.ui.components.FilterChips
@@ -129,13 +131,24 @@ fun ListScreen(
 
 @Composable
 private fun ActivityRow(item: SportActivity) {
+    val displayNameRes = remember(item.name) {
+        runCatching { SportType.valueOf(item.name) }.getOrNull()?.displayNameRes()
+    }
+    val displayName = displayNameRes?.let { stringResource(it) } ?: item.name
     Card(modifier = Modifier.fillMaxWidth()) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                Text(item.name, style = MaterialTheme.typography.titleMedium)
+                Text(displayName, style = MaterialTheme.typography.titleMedium)
                 StorageTypeChip(item.storage)
             }
             Text(item.durationMillis.formatDuration(), style = MaterialTheme.typography.bodySmall)
         }
     }
+}
+
+@StringRes
+private fun SportType.displayNameRes(): Int = when (this) {
+    SportType.RUN -> R.string.activity_run
+    SportType.BIKE -> R.string.activity_bike
+    SportType.SWIM -> R.string.activity_swim
 }

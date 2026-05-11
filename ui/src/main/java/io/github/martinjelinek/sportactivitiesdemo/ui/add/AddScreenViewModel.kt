@@ -56,7 +56,7 @@ class AddScreenViewModel @Inject constructor(
         viewModelScope.launch {
             val sportActivity = SportActivity(
                 id = idGenerator.next(),
-                name = sport.displayName,
+                name = sport.name,
                 startedAt = s.startedAt,
                 endedAt = s.endedAt,
                 storage = s.storage,
@@ -68,6 +68,12 @@ class AddScreenViewModel @Inject constructor(
                     _effects.send(AddScreenEffect.Saved(s.storage))
                 }
                 .onFailure { e -> _state.update { it.copy(isSubmitting = false, errorMessage = e.message) } }
+        }
+    }
+
+    private fun isSavable(): Boolean {
+        with (_state.value) {
+            return sport != null && endedAt > startedAt && !isSubmitting
         }
     }
 
