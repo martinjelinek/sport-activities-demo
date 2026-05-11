@@ -25,7 +25,6 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -33,6 +32,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.martinjelinek.sportactivitiesdemo.domain.model.SportActivity
 import io.github.martinjelinek.sportactivitiesdemo.domain.model.StorageType
 import io.github.martinjelinek.sportactivitiesdemo.ui.R
@@ -42,20 +42,30 @@ import io.github.martinjelinek.sportactivitiesdemo.util.formatDuration
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 
+// Top-level (not `remember` in the default param) so the slot lives in ListScreen, not the caller
+private val EmptySavedToSignal: StateFlow<String?> = MutableStateFlow(null)
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ListScreen(
     onAddClick: () -> Unit,
-    savedToSignal: StateFlow<String?> = remember { MutableStateFlow(null) },
+    modifier: Modifier = Modifier,
+    savedToSignal: StateFlow<String?> = EmptySavedToSignal,
     onSignalConsumed: () -> Unit = {},
     viewModel: ListScreenViewModel = hiltViewModel(),
 ) {
-    val state by viewModel.state.collectAsState()
-    val signal by savedToSignal.collectAsState()
+    val state by viewModel.state.collectAsStateWithLifecycle()
+    val signal by savedToSignal.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
     val savedLocalLabel = stringResource(R.string.storage_local)
     val savedRemoteLabel = stringResource(R.string.storage_remote)
     val snackbarTemplate = stringResource(R.string.list_snackbar_saved)
+
+    // Hoist the filter callback so FilterChips sees a stable function reference
+    // across recompositions and can be skipped when its inputs are unchanged.
+    val onFilterSelected = remember(viewModel) {
+        { filter: StorageType? -> viewModel.onEvent(ListScreenEvent.FilterSelected(filter)) }
+    }
 
     LaunchedEffect(signal) {
         signal?.let { name ->
@@ -70,6 +80,7 @@ fun ListScreen(
     }
 
     Scaffold(
+        modifier = modifier,
         topBar = { TopAppBar(title = { Text(stringResource(R.string.list_title)) }) },
         snackbarHost = { SnackbarHost(snackbarHostState) },
         floatingActionButton = {
@@ -88,15 +99,18 @@ fun ListScreen(
         ) {
             FilterChips(
                 selected = state.filter,
-                onSelect = { viewModel.onEvent(ListScreenEvent.FilterSelected(it)) },
+                onSelect = onFilterSelected,
                 modifier = Modifier.padding(16.dp),
             )
+            // Local capture so smart-cast applies in the `errorMessage != null`
+            // arm — and so we don't need `!!` on the property read.
+            val errorMessage = state.errorMessage
             when {
                 state.isLoading -> Box(Modifier.fillMaxSize(), Alignment.Center) {
                     CircularProgressIndicator()
                 }
-                state.errorMessage != null -> Box(Modifier.fillMaxSize(), Alignment.Center) {
-                    Text(state.errorMessage!!, color = MaterialTheme.colorScheme.error)
+                errorMessage != null -> Box(Modifier.fillMaxSize(), Alignment.Center) {
+                    Text(errorMessage, color = MaterialTheme.colorScheme.error)
                 }
                 state.items.isEmpty() -> Box(Modifier.fillMaxSize(), Alignment.Center) {
                     Text(stringResource(R.string.list_empty_state))

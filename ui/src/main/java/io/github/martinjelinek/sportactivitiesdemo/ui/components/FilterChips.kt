@@ -1,5 +1,6 @@
 package io.github.martinjelinek.sportactivitiesdemo.ui.components
 
+import androidx.annotation.StringRes
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.material3.FilterChip
@@ -11,6 +12,10 @@ import androidx.compose.ui.unit.dp
 import io.github.martinjelinek.sportactivitiesdemo.domain.model.StorageType
 import io.github.martinjelinek.sportactivitiesdemo.ui.R
 
+// All filter options the user can pick (null = "All"). Lifted to file scope
+// so the list isn't re-allocated on every recomposition of FilterChips.
+private val FILTER_OPTIONS: List<StorageType?> = listOf(null, StorageType.LOCAL, StorageType.REMOTE)
+
 @Composable
 fun FilterChips(
     selected: StorageType?,
@@ -18,19 +23,23 @@ fun FilterChips(
     modifier: Modifier = Modifier,
 ) {
     Row(modifier = modifier, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-        listOf<StorageType?>(null, StorageType.LOCAL, StorageType.REMOTE).forEach { f ->
+        FILTER_OPTIONS.forEach { f ->
             FilterChip(
                 selected = f == selected,
                 onClick = { onSelect(f) },
-                label = { Text(labelFor(f)) },
+                label = { Text(stringResource(f.labelRes())) },
             )
         }
     }
 }
 
-@Composable
-private fun labelFor(filter: StorageType?): String = when (filter) {
-    null -> stringResource(R.string.filter_all)
-    StorageType.LOCAL -> stringResource(R.string.storage_local)
-    StorageType.REMOTE -> stringResource(R.string.storage_remote)
+// Plain (non-`@Composable`) helper returning a `@StringRes Int` so the
+// `stringResource(...)` call stays at the use site. A user-defined `@Composable`
+// helper returning `String` would be non-restartable and re-execute for every
+// chip on every recomposition of FilterChips.
+@StringRes
+private fun StorageType?.labelRes(): Int = when (this) {
+    null -> R.string.filter_all
+    StorageType.LOCAL -> R.string.storage_local
+    StorageType.REMOTE -> R.string.storage_remote
 }
