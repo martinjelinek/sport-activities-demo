@@ -56,6 +56,7 @@ import java.util.TimeZone
 fun AddScreen(
     onSaved: (StorageType) -> Unit,
     onNavigateBack: () -> Unit,
+    modifier: Modifier = Modifier,
     viewModel: AddScreenViewModel = hiltViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
@@ -70,6 +71,7 @@ fun AddScreen(
     }
 
     Scaffold(
+        modifier = modifier,
         topBar = {
             TopAppBar(
                 title = { Text(stringResource(R.string.add_title)) },
@@ -111,13 +113,18 @@ fun AddScreen(
                     .testTag(AddScreenTestTags.LOCATION_FIELD),
             )
 
+            // Format only when the underlying timestamp changes — avoids
+            // re-running SimpleDateFormat.format on every recomposition
+            val startedFormatted = remember(state.startedAt) { formatTimestamp(state.startedAt) }
+            val endedFormatted = remember(state.endedAt) { formatTimestamp(state.endedAt) }
+
             OutlinedButton(
                 onClick = { pickerTarget = PickerTarget.Started },
                 modifier = Modifier.fillMaxWidth(),
             ) {
                 Text(
                     if (state.startedAt == 0L) stringResource(R.string.add_pick_start)
-                    else stringResource(R.string.add_started_at, formatTimestamp(state.startedAt)),
+                    else stringResource(R.string.add_started_at, startedFormatted),
                 )
             }
             OutlinedButton(
@@ -126,7 +133,7 @@ fun AddScreen(
             ) {
                 Text(
                     if (state.endedAt == 0L) stringResource(R.string.add_pick_end)
-                    else stringResource(R.string.add_ended_at, formatTimestamp(state.endedAt)),
+                    else stringResource(R.string.add_ended_at, endedFormatted),
                 )
             }
             if (state.startedAt != 0L && state.endedAt != 0L && state.endedAt <= state.startedAt) {
@@ -205,7 +212,11 @@ private fun DateTimePickerDialog(
     onDismiss: () -> Unit,
 ) {
     var step by remember { mutableStateOf(PickerStep.Date) }
-    val seed = if (initialMillis != 0L) initialMillis else System.currentTimeMillis()
+    // Capture seed once per initialMillis. Without remember, System.currentTimeMillis()
+    // is evaluated bare on every recomposition and can drift under rememberDatePickerState.
+    val seed = remember(initialMillis) {
+        if (initialMillis != 0L) initialMillis else System.currentTimeMillis()
+    }
     val datePickerState = rememberDatePickerState(initialSelectedDateMillis = seed)
     val seedCal = remember(seed) { Calendar.getInstance().apply { timeInMillis = seed } }
     val timePickerState = rememberTimePickerState(
@@ -281,18 +292,12 @@ private fun combineDateAndTime(dateUtcMillis: Long, hour: Int, minute: Int): Lon
     }.timeInMillis
 }
 
-// Hoisted to file scope so we don't reconstruct the formatter on each call
-// from the composition body. Only ever read from the Main thread (composable
-// scope), so SimpleDateFormat's lack of thread-safety isn't a concern here.
 private val TIMESTAMP_FORMATTER: SimpleDateFormat =
     SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefault())
 
 private fun formatTimestamp(epochMillis: Long): String =
     TIMESTAMP_FORMATTER.format(Date(epochMillis))
 
-// Stable test identifiers for the screen — decoupled from displayed text so
-// translations and copy edits don't break UI tests. `internal` so the :ui
-// androidTest source set can reach them without re-exporting publicly.
 internal object AddScreenTestTags {
     const val NAME_FIELD = "add_name_field"
     const val LOCATION_FIELD = "add_location_field"
