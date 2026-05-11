@@ -9,14 +9,19 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.DirectionsBike
+import androidx.compose.material.icons.automirrored.filled.DirectionsRun
 import androidx.compose.material.icons.filled.LocationOn
+import androidx.compose.material.icons.filled.Pool
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -38,6 +43,7 @@ import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -49,9 +55,11 @@ import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberPermissionState
 import com.google.accompanist.permissions.shouldShowRationale
+import io.github.martinjelinek.sportactivitiesdemo.domain.model.SportType
 import io.github.martinjelinek.sportactivitiesdemo.domain.model.StorageType
 import io.github.martinjelinek.sportactivitiesdemo.ui.R
 import io.github.martinjelinek.sportactivitiesdemo.ui.components.DateTimePickerDialog
+import io.github.martinjelinek.sportactivitiesdemo.ui.components.ImageCard
 import io.github.martinjelinek.sportactivitiesdemo.ui.components.PickerTarget
 import io.github.martinjelinek.sportactivitiesdemo.util.formatTimestamp
 
@@ -107,7 +115,7 @@ fun AddScreen(
         modifier = modifier,
         topBar = {
             TopAppBar(
-                title = { Text(stringResource(R.string.add_title)) },
+                title = { Text(stringResource(state.sport?.titleRes() ?: R.string.add_title)) },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
                         Icon(
@@ -165,6 +173,7 @@ private fun AddScreenContent(
     modifier: Modifier = Modifier,
 ) {
     val storageTypes = remember { StorageType.entries }
+    val onSportSelect = remember(onEvent) { { sport: SportType -> onEvent(AddScreenEvent.SportSelected(sport)) } }
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -172,14 +181,10 @@ private fun AddScreenContent(
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
-        OutlinedTextField(
-            value = state.name,
-            onValueChange = { onEvent(AddScreenEvent.NameChanged(it)) },
-            label = { Text(stringResource(R.string.add_field_name)) },
-            singleLine = true,
-            modifier = Modifier
-                .fillMaxWidth()
-                .testTag(AddScreenTestTags.NAME_FIELD),
+        SportSelector(
+            selected = state.sport,
+            onSelect = onSportSelect,
+            modifier = Modifier.fillMaxWidth(),
         )
 
         Row(
@@ -286,14 +291,72 @@ private fun AddScreenContent(
     }
 }
 
+@Composable
+private fun SportSelector(
+    selected: SportType?,
+    onSelect: (SportType) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val tint = MaterialTheme.colorScheme.onSurfaceVariant
+    val onRun = remember(onSelect) { { onSelect(SportType.RUN) } }
+    val onBike = remember(onSelect) { { onSelect(SportType.BIKE) } }
+    val onSwim = remember(onSelect) { { onSelect(SportType.SWIM) } }
+    Row(
+        modifier = modifier
+            .height(96.dp)
+            .selectableGroup(),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        ImageCard(
+            selected = selected == SportType.RUN,
+            painter = rememberVectorPainter(Icons.AutoMirrored.Filled.DirectionsRun),
+            contentDescription = stringResource(R.string.activity_run),
+            onClick = onRun,
+            modifier = Modifier
+                .weight(1f)
+                .testTag(AddScreenTestTags.SPORT_CARD_RUN),
+            tint = tint,
+        )
+        ImageCard(
+            selected = selected == SportType.BIKE,
+            painter = rememberVectorPainter(Icons.AutoMirrored.Filled.DirectionsBike),
+            contentDescription = stringResource(R.string.activity_bike),
+            onClick = onBike,
+            modifier = Modifier
+                .weight(1f)
+                .testTag(AddScreenTestTags.SPORT_CARD_BIKE),
+            tint = tint,
+        )
+        ImageCard(
+            selected = selected == SportType.SWIM,
+            painter = rememberVectorPainter(Icons.Filled.Pool),
+            contentDescription = stringResource(R.string.activity_swim),
+            onClick = onSwim,
+            modifier = Modifier
+                .weight(1f)
+                .testTag(AddScreenTestTags.SPORT_CARD_SWIM),
+            tint = tint,
+        )
+    }
+}
+
 @StringRes
 private fun StorageType.labelRes(): Int = when (this) {
     StorageType.LOCAL -> R.string.storage_local
     StorageType.REMOTE -> R.string.storage_remote
 }
 
+@StringRes
+private fun SportType.titleRes(): Int = when (this) {
+    SportType.RUN -> R.string.add_title_run
+    SportType.BIKE -> R.string.add_title_bike
+    SportType.SWIM -> R.string.add_title_swim
+}
+
 internal object AddScreenTestTags {
-    const val NAME_FIELD = "add_name_field"
+    const val SPORT_CARD_RUN = "add_sport_card_run"
+    const val SPORT_CARD_BIKE = "add_sport_card_bike"
+    const val SPORT_CARD_SWIM = "add_sport_card_swim"
     const val LOCATION_FIELD = "add_location_field"
     const val USE_MY_LOCATION_BUTTON = "add_use_my_location_button"
     const val SAVE_BUTTON = "add_save_button"

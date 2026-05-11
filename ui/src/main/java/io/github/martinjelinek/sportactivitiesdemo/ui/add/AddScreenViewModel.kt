@@ -41,7 +41,7 @@ class AddScreenViewModel @Inject constructor(
 
     fun onEvent(event: AddScreenEvent) {
         when (event) {
-            is AddScreenEvent.NameChanged -> _state.update { it.copy(name = event.value) }
+            is AddScreenEvent.SportSelected -> _state.update { it.copy(sport = event.value) }
             is AddScreenEvent.LocationChanged -> _state.update { it.copy(location = event.value) }
             is AddScreenEvent.StartedAtChanged -> _state.update { it.copy(startedAt = event.value) }
             is AddScreenEvent.EndedAtChanged -> _state.update { it.copy(endedAt = event.value) }
@@ -81,11 +81,13 @@ class AddScreenViewModel @Inject constructor(
     private fun save() {
         val s = _state.value
         if (!s.isSavable) return
+        // isSavable guarantees sport is non-null
+        val sport = checkNotNull(s.sport)
         _state.update { it.copy(isSubmitting = true, errorMessage = null) }
         viewModelScope.launch {
             val sportActivity = SportActivity(
                 id = idGenerator.next(),
-                name = s.name.trim(),
+                name = sport.displayName,
                 location = s.location.trim(),
                 startedAt = s.startedAt,
                 endedAt = s.endedAt,

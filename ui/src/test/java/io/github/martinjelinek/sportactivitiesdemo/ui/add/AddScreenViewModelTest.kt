@@ -6,6 +6,7 @@ import io.github.martinjelinek.sportactivitiesdemo.domain.IdGenerator
 import io.github.martinjelinek.sportactivitiesdemo.domain.location.LocationProvider
 import io.github.martinjelinek.sportactivitiesdemo.domain.model.Coordinates
 import io.github.martinjelinek.sportactivitiesdemo.domain.model.SportActivity
+import io.github.martinjelinek.sportactivitiesdemo.domain.model.SportType
 import io.github.martinjelinek.sportactivitiesdemo.domain.model.StorageType
 import io.github.martinjelinek.sportactivitiesdemo.domain.repository.SportActivityRepository
 import io.mockk.coEvery
@@ -47,11 +48,11 @@ class AddScreenViewModelTest {
     }
 
     @Test
-    fun `isSavable requires non-blank name and location`() = runTest {
+    fun `isSavable requires a sport and non-blank location`() = runTest {
         val vm = newVm()
         // Times are already valid after init.
         assertThat(vm.state.value.isSavable).isFalse()
-        vm.onEvent(AddScreenEvent.NameChanged("Run"))
+        vm.onEvent(AddScreenEvent.SportSelected(SportType.RUN))
         vm.onEvent(AddScreenEvent.LocationChanged("Park"))
         assertThat(vm.state.value.isSavable).isTrue()
     }
@@ -63,7 +64,7 @@ class AddScreenViewModelTest {
 
         val vm = newVm()
         vm.effects.test {
-            vm.onEvent(AddScreenEvent.NameChanged("Run"))
+            vm.onEvent(AddScreenEvent.SportSelected(SportType.RUN))
             vm.onEvent(AddScreenEvent.LocationChanged("Park"))
             vm.onEvent(AddScreenEvent.StorageChanged(StorageType.REMOTE))
             vm.onEvent(AddScreenEvent.Save)
@@ -73,7 +74,7 @@ class AddScreenViewModelTest {
         }
 
         coVerify { repo.save(any()) }
-        assertThat(captured.captured.name).isEqualTo("Run")
+        assertThat(captured.captured.name).isEqualTo(SportType.RUN.displayName)
         assertThat(captured.captured.storage).isEqualTo(StorageType.REMOTE)
         assertThat(captured.captured.id).isEqualTo(FIXED_ID)
         assertThat(captured.captured.createdAt).isEqualTo(FIXED_NOW)
@@ -84,7 +85,7 @@ class AddScreenViewModelTest {
         coEvery { repo.save(any()) } returns Result.failure(RuntimeException("boom"))
         val vm = newVm()
         vm.effects.test {
-            vm.onEvent(AddScreenEvent.NameChanged("Run"))
+            vm.onEvent(AddScreenEvent.SportSelected(SportType.RUN))
             vm.onEvent(AddScreenEvent.LocationChanged("Park"))
             vm.onEvent(AddScreenEvent.Save)
             advanceUntilIdle()

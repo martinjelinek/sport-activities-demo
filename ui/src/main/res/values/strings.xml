@@ -9,8 +9,10 @@
     <string name="list_snackbar_saved">Saved to %1$s</string>
 
     <string name="add_title">Add activity</string>
+    <string name="add_title_run">Add run</string>
+    <string name="add_title_bike">Add bike ride</string>
+    <string name="add_title_swim">Add swim</string>
     <string name="add_back_description">Back</string>
-    <string name="add_field_name">Name</string>
     <string name="add_field_location">Location</string>
     <string name="add_pick_start">Pick start time</string>
     <string name="add_pick_end">Pick end time</string>
@@ -26,4 +28,7 @@
     <string name="add_picker_time_title">Pick time</string>
     <string name="add_use_my_location">Use my location</string>
     <string name="add_location_error_unavailable">Could not get location</string>
+    <string name="activity_run">Running</string>
+    <string name="activity_bike">Cycling</string>
+    <string name="activity_swim">Swimming</string>
 </resources>
