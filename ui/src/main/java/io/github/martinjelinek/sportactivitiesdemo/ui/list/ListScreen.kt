@@ -47,18 +47,14 @@ import io.github.martinjelinek.sportactivitiesdemo.ui.theme.SportActivitiesDemoT
 import io.github.martinjelinek.sportactivitiesdemo.ui.theme.containerColor
 import io.github.martinjelinek.sportactivitiesdemo.ui.theme.onContainerColor
 import io.github.martinjelinek.sportactivitiesdemo.util.formatDuration
-import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-
-// Top-level (not `remember` in the default param) so the slot lives in ListScreen, not the caller
-private val EmptySavedToSignal: StateFlow<String?> = MutableStateFlow(null)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ListScreen(
     onAddClick: () -> Unit,
+    savedToSignal: StateFlow<String?>,
     modifier: Modifier = Modifier,
-    savedToSignal: StateFlow<String?> = EmptySavedToSignal,
     onSignalConsumed: () -> Unit = {},
     viewModel: ListScreenViewModel = hiltViewModel(),
 ) {
