@@ -8,28 +8,6 @@ Android assignment app: record a sport activity (name, location, start/end time,
 ./gradlew :app:installDebug
 ```
 
-`app/google-services.json` is committed and points at the demo Firebase project, so the **Remote** storage option works out of the box. If you remove the file, the app falls back to an in-memory fake remote — the build conditionally applies the google-services plugin based on whether the file is present.
-
-## Pointing at your own Firebase project
-
-If you fork this and want to use a different Firebase project, replace `app/google-services.json` with one from your own console, then mirror the setup:
-
-1. **Authentication → Sign-in method → Anonymous → Enable**.
-2. **Firestore → Rules**:
-
-   ```
-   rules_version = '2';
-   service cloud.firestore {
-     match /databases/{database}/documents {
-       match /users/{uid}/sport_activities/{doc} {
-         allow read, write: if request.auth != null && request.auth.uid == uid;
-       }
-     }
-   }
-   ```
-
-On first remote write, the app signs in anonymously and stores documents under `users/{uid}/sport_activities`. Clearing app data or reinstalling starts a new anonymous user; the previous documents are orphaned (Firebase auto-expires anonymous accounts after ~30 days of inactivity).
-
 ## Modules
 
 ```
@@ -59,7 +37,3 @@ On first remote write, the app signs in anonymously and stores documents under `
 
 ## Not implemented
 
-- `SavedStateHandle`-backed form persistence on Add — an in-progress form is lost on process death.
-- Editing or deleting an activity.
-- Per-user sign-in beyond per-install anonymous auth.
-- Compose UI tests beyond a single happy path.
