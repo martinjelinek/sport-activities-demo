@@ -14,6 +14,7 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import io.github.martinjelinek.sportactivitiesdemo.data.local.SportActivityDao
 import io.github.martinjelinek.sportactivitiesdemo.data.local.SportActivityDatabase
+import java.time.Clock
 import javax.inject.Singleton
 
 @Module
@@ -35,6 +36,10 @@ object DataModule {
     @Provides
     @Singleton
     fun provideFirebaseAuth(): FirebaseAuth = Firebase.auth
+
+    @Provides
+    @Singleton
+    fun provideClock(): Clock = Clock.systemUTC()
 
     private const val DATABASE_NAME = "sport_activities.db"
 }

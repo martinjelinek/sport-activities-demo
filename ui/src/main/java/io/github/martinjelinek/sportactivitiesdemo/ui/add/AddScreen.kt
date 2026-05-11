@@ -33,7 +33,10 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
+import androidx.lifecycle.compose.LocalLifecycleOwner
+import androidx.lifecycle.flowWithLifecycle
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
@@ -64,10 +67,16 @@ fun AddScreen(
     var pickerTarget by remember { mutableStateOf<PickerTarget?>(null) }
     val storageTypes = remember { StorageType.entries }
 
-    LaunchedEffect(state.savedTo) {
-        state.savedTo?.let {
-            onSaved(it)
-            viewModel.onEvent(AddScreenEvent.ConsumeSavedSignal)
+    val currentOnSaved by rememberUpdatedState(onSaved)
+    val lifecycle = LocalLifecycleOwner.current.lifecycle
+    LaunchedEffect(viewModel, lifecycle) {
+        // flowWithLifecycle pauses collection below STARTED so onSaved (which triggers
+        // navigation) can't fire while the host isn't RESUMED. Buffered effects in the
+        // Channel are delivered when collection resumes.
+        viewModel.effects.flowWithLifecycle(lifecycle).collect { effect ->
+            when (effect) {
+                is AddScreenEffect.Saved -> currentOnSaved(effect.storage)
+            }
         }
     }
 

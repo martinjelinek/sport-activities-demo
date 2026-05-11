@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "988055947197",
+    "project_id": "sport-activities-demo",
+    "storage_bucket": "sport-activities-demo.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:988055947197:android:ca1802d74078e9816634d4",
+        "android_client_info": {
+          "package_name": "io.github.martinjelinek.sportactivitiesdemo"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDQqjO-5G1-xAhg_fmYxgRJ-eVPWbx_zoY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

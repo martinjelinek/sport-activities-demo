@@ -6,15 +6,22 @@ import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
 import io.github.martinjelinek.sportactivitiesdemo.domain.model.SportActivity
 import javax.inject.Inject
+import javax.inject.Singleton
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.tasks.await
 
+@Singleton
 class FirestoreRemoteDataSource @Inject constructor(
     private val firestore: FirebaseFirestore,
     private val auth: FirebaseAuth,
 ) : RemoteDataSource {
+
+    // Serializes anonymous sign-in so two concurrent callers can't both mint a user.
+    private val authMutex = Mutex()
 
     override fun observe(): Flow<List<SportActivity>> = callbackFlow {
         val registration = userCollection(ensureSignedIn())
@@ -39,8 +46,16 @@ class FirestoreRemoteDataSource @Inject constructor(
             .await()
     }
 
+    /**
+     * Ensure that there is a signed-in user.
+     * Uses a mutex so two concurrent callers can't both create a user.
+     */
     private suspend fun ensureSignedIn(): String =
-        auth.currentUser?.uid ?: auth.signInAnonymously().await().user!!.uid
+        auth.currentUser?.uid ?: authMutex.withLock {
+            auth.currentUser?.uid
+                ?: auth.signInAnonymously().await().user?.uid
+                ?: error("Anonymous sign-in returned no user")
+        }
 
     private fun userCollection(uid: String): CollectionReference =
         firestore.collection(USERS).document(uid).collection(COLLECTION)
