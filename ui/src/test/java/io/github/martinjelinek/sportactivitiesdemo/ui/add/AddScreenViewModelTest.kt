@@ -1,5 +1,6 @@
 package io.github.martinjelinek.sportactivitiesdemo.ui.add
 
+import app.cash.turbine.test
 import com.google.common.truth.Truth.assertThat
 import io.github.martinjelinek.sportactivitiesdemo.domain.IdGenerator
 import io.github.martinjelinek.sportactivitiesdemo.domain.model.SportActivity
@@ -15,6 +16,7 @@ import java.time.ZoneOffset
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
+import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
@@ -44,38 +46,45 @@ class AddScreenViewModelTest {
     }
 
     @Test
-    fun `Save calls repo with current form, emits savedTo on success`() = runTest {
+    fun `Save calls repo with current form and emits Saved effect on success`() = runTest {
         val captured = slot<SportActivity>()
         coEvery { repo.save(capture(captured)) } returns Result.success(Unit)
 
         val vm = AddScreenViewModel(repo, clock, idGenerator)
-        vm.onEvent(AddScreenEvent.NameChanged("Run"))
-        vm.onEvent(AddScreenEvent.LocationChanged("Park"))
-        vm.onEvent(AddScreenEvent.StartedAtChanged(0L))
-        vm.onEvent(AddScreenEvent.EndedAtChanged(1000L))
-        vm.onEvent(AddScreenEvent.StorageChanged(StorageType.REMOTE))
-        vm.onEvent(AddScreenEvent.Save)
+        vm.effects.test {
+            vm.onEvent(AddScreenEvent.NameChanged("Run"))
+            vm.onEvent(AddScreenEvent.LocationChanged("Park"))
+            vm.onEvent(AddScreenEvent.StartedAtChanged(0L))
+            vm.onEvent(AddScreenEvent.EndedAtChanged(1000L))
+            vm.onEvent(AddScreenEvent.StorageChanged(StorageType.REMOTE))
+            vm.onEvent(AddScreenEvent.Save)
+
+            assertThat(awaitItem()).isEqualTo(AddScreenEffect.Saved(StorageType.REMOTE))
+            cancelAndIgnoreRemainingEvents()
+        }
 
         coVerify { repo.save(any()) }
         assertThat(captured.captured.name).isEqualTo("Run")
         assertThat(captured.captured.storage).isEqualTo(StorageType.REMOTE)
         assertThat(captured.captured.id).isEqualTo(FIXED_ID)
         assertThat(captured.captured.createdAt).isEqualTo(FIXED_NOW)
-        assertThat(vm.state.value.savedTo).isEqualTo(StorageType.REMOTE)
     }
 
     @Test
-    fun `Save sets errorMessage on failure`() = runTest {
+    fun `Save sets errorMessage on failure and emits no effect`() = runTest {
         coEvery { repo.save(any()) } returns Result.failure(RuntimeException("boom"))
         val vm = AddScreenViewModel(repo, clock, idGenerator)
-        vm.onEvent(AddScreenEvent.NameChanged("Run"))
-        vm.onEvent(AddScreenEvent.LocationChanged("Park"))
-        vm.onEvent(AddScreenEvent.StartedAtChanged(0L))
-        vm.onEvent(AddScreenEvent.EndedAtChanged(1000L))
-        vm.onEvent(AddScreenEvent.Save)
+        vm.effects.test {
+            vm.onEvent(AddScreenEvent.NameChanged("Run"))
+            vm.onEvent(AddScreenEvent.LocationChanged("Park"))
+            vm.onEvent(AddScreenEvent.StartedAtChanged(0L))
+            vm.onEvent(AddScreenEvent.EndedAtChanged(1000L))
+            vm.onEvent(AddScreenEvent.Save)
+            advanceUntilIdle()
 
+            expectNoEvents()
+        }
         assertThat(vm.state.value.errorMessage).isEqualTo("boom")
-        assertThat(vm.state.value.savedTo).isNull()
     }
 
     private companion object {
