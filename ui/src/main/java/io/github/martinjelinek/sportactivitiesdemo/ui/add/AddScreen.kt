@@ -26,6 +26,7 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
@@ -41,6 +42,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.LocalLifecycleOwner
@@ -52,6 +54,7 @@ import io.github.martinjelinek.sportactivitiesdemo.ui.R
 import io.github.martinjelinek.sportactivitiesdemo.ui.components.DateTimePickerDialog
 import io.github.martinjelinek.sportactivitiesdemo.ui.components.ImageCard
 import io.github.martinjelinek.sportactivitiesdemo.ui.components.PickerTarget
+import io.github.martinjelinek.sportactivitiesdemo.ui.theme.SportActivitiesDemoTheme
 import io.github.martinjelinek.sportactivitiesdemo.ui.theme.containerColor
 import io.github.martinjelinek.sportactivitiesdemo.ui.theme.onContainerColor
 import io.github.martinjelinek.sportactivitiesdemo.util.formatTimestamp
@@ -196,6 +199,7 @@ private fun AddScreenContent(
                 else stringResource(R.string.add_ended_at, endedFormatted),
             )
         }
+        // TODO this should be handled in the VM
         if (state.startedAt != 0L && state.endedAt != 0L && state.endedAt <= state.startedAt) {
             Text(
                 text = stringResource(R.string.add_end_before_start_error),
@@ -310,4 +314,94 @@ internal object AddScreenTestTags {
     const val SPORT_CARD_BIKE = "add_sport_card_bike"
     const val SPORT_CARD_SWIM = "add_sport_card_swim"
     const val SAVE_BUTTON = "add_save_button"
+}
+
+private const val PREVIEW_NOW = 1_700_000_000_000L
+private const val PREVIEW_HALF_HOUR = 30L * 60L * 1000L
+
+@PreviewLightDark
+@Composable
+private fun AddScreenContentPreviewEmpty() {
+    SportActivitiesDemoTheme {
+        Surface {
+            AddScreenContent(
+                state = AddScreenUiState(
+                    startedAt = PREVIEW_NOW,
+                    endedAt = PREVIEW_NOW + PREVIEW_HALF_HOUR,
+                ),
+                onEvent = {},
+                onStartedClick = {},
+                onEndedClick = {},
+            )
+        }
+    }
+}
+
+@PreviewLightDark
+@Composable
+private fun AddScreenContentPreviewRunSelected() {
+    SportActivitiesDemoTheme {
+        Surface {
+            AddScreenContent(
+                state = AddScreenUiState(
+                    sport = SportType.RUN,
+                    location = "Stromovka",
+                    startedAt = PREVIEW_NOW,
+                    endedAt = PREVIEW_NOW + PREVIEW_HALF_HOUR,
+                ),
+                onEvent = {},
+                onStartedClick = {},
+                onEndedClick = {},
+            )
+        }
+    }
+}
+
+@PreviewLightDark
+@Composable
+private fun AddScreenContentPreviewSubmitting() {
+    SportActivitiesDemoTheme {
+        Surface {
+            AddScreenContent(
+                state = AddScreenUiState(
+                    sport = SportType.SWIM,
+                    location = "Hotel pool",
+                    startedAt = PREVIEW_NOW,
+                    endedAt = PREVIEW_NOW + PREVIEW_HALF_HOUR,
+                    isSubmitting = true,
+                ),
+                onEvent = {},
+                onStartedClick = {},
+                onEndedClick = {},
+            )
+        }
+    }
+}
+
+@PreviewLightDark
+@Composable
+private fun SportSelectorPreviewNone() {
+    SportActivitiesDemoTheme {
+        Surface(Modifier.padding(16.dp)) {
+            SportSelector(
+                selected = null,
+                onSelect = {},
+                modifier = Modifier.fillMaxWidth(),
+            )
+        }
+    }
+}
+
+@PreviewLightDark
+@Composable
+private fun SportSelectorPreviewBikeSelected() {
+    SportActivitiesDemoTheme {
+        Surface(Modifier.padding(16.dp)) {
+            SportSelector(
+                selected = SportType.BIKE,
+                onSelect = {},
+                modifier = Modifier.fillMaxWidth(),
+            )
+        }
+    }
 }

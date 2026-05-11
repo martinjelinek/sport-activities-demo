@@ -3,14 +3,18 @@ package io.github.martinjelinek.sportactivitiesdemo.ui.components
 import androidx.annotation.StringRes
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.FilterChip
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import io.github.martinjelinek.sportactivitiesdemo.domain.model.StorageType
 import io.github.martinjelinek.sportactivitiesdemo.ui.R
+import io.github.martinjelinek.sportactivitiesdemo.ui.theme.SportActivitiesDemoTheme
 
 // All filter options the user can pick (null = "All"). Lifted to file scope
 // so the list isn't re-allocated on every recomposition of FilterChips.
@@ -42,4 +46,24 @@ private fun StorageType?.labelRes(): Int = when (this) {
     null -> R.string.filter_all
     StorageType.LOCAL -> R.string.storage_local
     StorageType.REMOTE -> R.string.storage_remote
+}
+
+@PreviewLightDark
+@Composable
+private fun FilterChipsPreviewAll() {
+    SportActivitiesDemoTheme {
+        Surface(Modifier.padding(16.dp)) {
+            FilterChips(selected = null, onSelect = {})
+        }
+    }
+}
+
+@PreviewLightDark
+@Composable
+private fun FilterChipsPreviewLocal() {
+    SportActivitiesDemoTheme {
+        Surface(Modifier.padding(16.dp)) {
+            FilterChips(selected = StorageType.LOCAL, onSelect = {})
+        }
+    }
 }

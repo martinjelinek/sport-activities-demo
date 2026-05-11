@@ -21,6 +21,7 @@ import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
@@ -32,6 +33,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -41,6 +43,7 @@ import io.github.martinjelinek.sportactivitiesdemo.domain.model.StorageType
 import io.github.martinjelinek.sportactivitiesdemo.ui.R
 import io.github.martinjelinek.sportactivitiesdemo.ui.components.FilterChips
 import io.github.martinjelinek.sportactivitiesdemo.ui.components.StorageTypeChip
+import io.github.martinjelinek.sportactivitiesdemo.ui.theme.SportActivitiesDemoTheme
 import io.github.martinjelinek.sportactivitiesdemo.ui.theme.containerColor
 import io.github.martinjelinek.sportactivitiesdemo.ui.theme.onContainerColor
 import io.github.martinjelinek.sportactivitiesdemo.util.formatDuration
@@ -135,7 +138,7 @@ fun ListScreen(
 @Composable
 private fun ActivityRow(item: SportActivity) {
     val sportType = remember(item.name) {
-        runCatching { SportType.valueOf(item.name) }.getOrNull()
+        SportType.entries.firstOrNull { it.name == item.name }
     }
     val displayNameRes = remember(sportType) { sportType?.displayNameRes() }
     val displayName = displayNameRes?.let { stringResource(it) } ?: item.name
@@ -163,4 +166,63 @@ private fun SportType.displayNameRes(): Int = when (this) {
     SportType.RUN -> R.string.activity_run
     SportType.BIKE -> R.string.activity_bike
     SportType.SWIM -> R.string.activity_swim
+}
+
+private fun previewActivity(
+    id: String,
+    name: String,
+    location: String,
+    durationMinutes: Int,
+    storage: StorageType,
+) = SportActivity(
+    id = id,
+    name = name,
+    location = location,
+    startedAt = 0L,
+    endedAt = durationMinutes * 60L * 1000L,
+    storage = storage,
+    createdAt = 0L,
+)
+
+@PreviewLightDark
+@Composable
+private fun ActivityRowPreviewRun() {
+    SportActivitiesDemoTheme {
+        Surface(Modifier.padding(16.dp)) {
+            ActivityRow(previewActivity("1", "RUN", "Stromovka", 32, StorageType.LOCAL))
+        }
+    }
+}
+
+@PreviewLightDark
+@Composable
+private fun ActivityRowPreviewBikeNoLocation() {
+    SportActivitiesDemoTheme {
+        Surface(Modifier.padding(16.dp)) {
+            ActivityRow(previewActivity("2", "BIKE", "", 60, StorageType.REMOTE))
+        }
+    }
+}
+
+@PreviewLightDark
+@Composable
+private fun ActivityRowPreviewSwim() {
+    SportActivitiesDemoTheme {
+        Surface(Modifier.padding(16.dp)) {
+            ActivityRow(previewActivity("3", "SWIM", "Hotel pool", 45, StorageType.LOCAL))
+        }
+    }
+}
+
+@PreviewLightDark
+@Composable
+private fun ActivityRowPreviewLegacyName() {
+    // Legacy row written before commit 2074890: `name` holds the old display
+    // string instead of the enum identifier, so SportType lookup falls back
+    // to default Card color and the raw name renders as the title.
+    SportActivitiesDemoTheme {
+        Surface(Modifier.padding(16.dp)) {
+            ActivityRow(previewActivity("4", "Run", "", 30, StorageType.LOCAL))
+        }
+    }
 }
