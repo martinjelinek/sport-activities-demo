@@ -14,6 +14,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
@@ -40,6 +41,8 @@ import io.github.martinjelinek.sportactivitiesdemo.domain.model.StorageType
 import io.github.martinjelinek.sportactivitiesdemo.ui.R
 import io.github.martinjelinek.sportactivitiesdemo.ui.components.FilterChips
 import io.github.martinjelinek.sportactivitiesdemo.ui.components.StorageTypeChip
+import io.github.martinjelinek.sportactivitiesdemo.ui.theme.containerColor
+import io.github.martinjelinek.sportactivitiesdemo.ui.theme.onContainerColor
 import io.github.martinjelinek.sportactivitiesdemo.util.formatDuration
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -131,11 +134,17 @@ fun ListScreen(
 
 @Composable
 private fun ActivityRow(item: SportActivity) {
-    val displayNameRes = remember(item.name) {
-        runCatching { SportType.valueOf(item.name) }.getOrNull()?.displayNameRes()
+    val sportType = remember(item.name) {
+        runCatching { SportType.valueOf(item.name) }.getOrNull()
     }
+    val displayNameRes = remember(sportType) { sportType?.displayNameRes() }
     val displayName = displayNameRes?.let { stringResource(it) } ?: item.name
-    Card(modifier = Modifier.fillMaxWidth()) {
+    val cardContainer = sportType?.containerColor() ?: MaterialTheme.colorScheme.surfaceVariant
+    val cardContent = sportType?.onContainerColor ?: MaterialTheme.colorScheme.onSurfaceVariant
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(containerColor = cardContainer, contentColor = cardContent),
+    ) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                 Text(displayName, style = MaterialTheme.typography.titleMedium)

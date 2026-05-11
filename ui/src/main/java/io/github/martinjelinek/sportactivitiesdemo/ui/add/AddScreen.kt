@@ -1,6 +1,7 @@
 package io.github.martinjelinek.sportactivitiesdemo.ui.add
 
 import androidx.annotation.StringRes
+import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -27,6 +28,7 @@ import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -50,6 +52,8 @@ import io.github.martinjelinek.sportactivitiesdemo.ui.R
 import io.github.martinjelinek.sportactivitiesdemo.ui.components.DateTimePickerDialog
 import io.github.martinjelinek.sportactivitiesdemo.ui.components.ImageCard
 import io.github.martinjelinek.sportactivitiesdemo.ui.components.PickerTarget
+import io.github.martinjelinek.sportactivitiesdemo.ui.theme.containerColor
+import io.github.martinjelinek.sportactivitiesdemo.ui.theme.onContainerColor
 import io.github.martinjelinek.sportactivitiesdemo.util.formatTimestamp
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -80,10 +84,26 @@ fun AddScreen(
     val onStartedClick = remember { { pickerTarget = PickerTarget.Started } }
     val onEndedClick = remember { { pickerTarget = PickerTarget.Ended } }
 
+    val targetContainer = state.sport?.containerColor() ?: MaterialTheme.colorScheme.surface
+    val targetContent = state.sport?.onContainerColor ?: MaterialTheme.colorScheme.onSurface
+    val containerColor by animateColorAsState(
+        targetValue = targetContainer,
+        label = "addScreenContainer",
+    )
+    val contentColor by animateColorAsState(
+        targetValue = targetContent,
+        label = "addScreenContent",
+    )
+
     Scaffold(
         modifier = modifier,
         topBar = {
             TopAppBar(
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = containerColor,
+                    titleContentColor = contentColor,
+                    navigationIconContentColor = contentColor,
+                ),
                 title = { Text(stringResource(state.sport?.titleRes() ?: R.string.add_title)) },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
