@@ -5,6 +5,7 @@ import io.github.martinjelinek.sportactivitiesdemo.data.remote.RemoteDataSource
 import io.github.martinjelinek.sportactivitiesdemo.domain.model.SportActivity
 import io.github.martinjelinek.sportactivitiesdemo.domain.model.StorageType
 import io.github.martinjelinek.sportactivitiesdemo.domain.repository.SportActivityRepository
+import kotlinx.coroutines.CancellationException
 import javax.inject.Inject
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
@@ -28,5 +29,5 @@ class SportActivityRepositoryImpl @Inject constructor(
             StorageType.LOCAL -> local.save(sportActivity)
             StorageType.REMOTE -> remote.save(sportActivity)
         }
-    }
+    }.onFailure { if (it is CancellationException) throw it }
 }
