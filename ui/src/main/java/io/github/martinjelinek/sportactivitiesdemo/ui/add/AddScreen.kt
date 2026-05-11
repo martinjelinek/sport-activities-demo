@@ -45,9 +45,10 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.martinjelinek.sportactivitiesdemo.domain.model.StorageType
 import io.github.martinjelinek.sportactivitiesdemo.ui.R
-import java.text.SimpleDateFormat
+import java.time.Instant
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
 import java.util.Calendar
-import java.util.Date
 import java.util.Locale
 import java.util.TimeZone
 
@@ -305,11 +306,12 @@ private fun combineDateAndTime(dateUtcMillis: Long, hour: Int, minute: Int): Lon
     }.timeInMillis
 }
 
-private val TIMESTAMP_FORMATTER: SimpleDateFormat =
-    SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefault())
+private const val TIMESTAMP_PATTERN = "yyyy-MM-dd HH:mm"
 
 private fun formatTimestamp(epochMillis: Long): String =
-    TIMESTAMP_FORMATTER.format(Date(epochMillis))
+    DateTimeFormatter
+        .ofPattern(TIMESTAMP_PATTERN, Locale.getDefault())
+        .format(Instant.ofEpochMilli(epochMillis).atZone(ZoneId.systemDefault()))
 
 internal object AddScreenTestTags {
     const val NAME_FIELD = "add_name_field"
