@@ -14,7 +14,7 @@ if (rootProject.file("app/google-services.json").exists()) {
 
 android {
     namespace = "io.github.martinjelinek.sportactivitiesdemo"
-    compileSdk { version = release(36) }
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "io.github.martinjelinek.sportactivitiesdemo"
