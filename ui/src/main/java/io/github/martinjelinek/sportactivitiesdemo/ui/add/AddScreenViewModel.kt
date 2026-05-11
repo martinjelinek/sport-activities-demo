@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import io.github.martinjelinek.sportactivitiesdemo.domain.IdGenerator
+import io.github.martinjelinek.sportactivitiesdemo.domain.location.LocationProvider
 import io.github.martinjelinek.sportactivitiesdemo.domain.model.SportActivity
 import io.github.martinjelinek.sportactivitiesdemo.domain.repository.SportActivityRepository
 import java.time.Clock
@@ -22,9 +23,15 @@ class AddScreenViewModel @Inject constructor(
     private val repository: SportActivityRepository,
     private val clock: Clock,
     private val idGenerator: IdGenerator,
+    private val locationProvider: LocationProvider,
 ) : ViewModel() {
 
-    private val _state = MutableStateFlow(AddScreenUiState())
+    private val _state = MutableStateFlow(
+        AddScreenUiState(
+            startedAt = clock.millis(),
+            endedAt = clock.millis() + DEFAULT_DURATION_MS,
+        ),
+    )
     val state: StateFlow<AddScreenUiState> = _state.asStateFlow()
 
     // One-shot effects. BUFFERED so send() doesn't suspend and pending items survive
@@ -39,7 +46,35 @@ class AddScreenViewModel @Inject constructor(
             is AddScreenEvent.StartedAtChanged -> _state.update { it.copy(startedAt = event.value) }
             is AddScreenEvent.EndedAtChanged -> _state.update { it.copy(endedAt = event.value) }
             is AddScreenEvent.StorageChanged -> _state.update { it.copy(storage = event.value) }
+            AddScreenEvent.RefreshLocation -> refreshLocation()
             AddScreenEvent.Save -> save()
+        }
+    }
+
+    private fun refreshLocation() {
+        _state.update { it.copy(isResolvingLocation = true, hasLocationError = false) }
+        viewModelScope.launch {
+            val coords = locationProvider.currentCoordinates()
+            if (coords == null) {
+                _state.update {
+                    it.copy(
+                        isResolvingLocation = false,
+                        hasLocationError = true,
+                    )
+                }
+                return@launch
+            }
+            val resolved = locationProvider.getLocationDescription(coords)
+            _state.update {
+                // Don't clobber a manual edit — the coordinates still update so the
+                val nextLocation = if (it.location.isBlank() && !resolved.isNullOrBlank()) resolved else it.location
+                it.copy(
+                    coordinates = coords,
+                    location = nextLocation,
+                    isResolvingLocation = false,
+                    hasLocationError = false,
+                )
+            }
         }
     }
 
@@ -64,5 +99,9 @@ class AddScreenViewModel @Inject constructor(
                 }
                 .onFailure { e -> _state.update { it.copy(isSubmitting = false, errorMessage = e.message) } }
         }
+    }
+
+    private companion object {
+        const val DEFAULT_DURATION_MS = 30L * 60L * 1000L
     }
 }

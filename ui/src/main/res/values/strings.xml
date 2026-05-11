@@ -24,4 +24,6 @@
     <string name="add_picker_cancel">Cancel</string>
     <string name="add_picker_ok">OK</string>
     <string name="add_picker_time_title">Pick time</string>
+    <string name="add_use_my_location">Use my location</string>
+    <string name="add_location_error_unavailable">Could not get location</string>
 </resources>

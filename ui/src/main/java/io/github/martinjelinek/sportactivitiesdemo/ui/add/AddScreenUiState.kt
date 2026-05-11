@@ -1,10 +1,14 @@
 package io.github.martinjelinek.sportactivitiesdemo.ui.add
 
+import io.github.martinjelinek.sportactivitiesdemo.domain.model.Coordinates
 import io.github.martinjelinek.sportactivitiesdemo.domain.model.StorageType
 
 data class AddScreenUiState(
     val name: String = "",
     val location: String = "",
+    val coordinates: Coordinates? = null,
+    val isResolvingLocation: Boolean = false,
+    val hasLocationError: Boolean = false,
     val startedAt: Long = 0L,
     val endedAt: Long = 0L,
     val storage: StorageType = StorageType.LOCAL,
@@ -21,6 +25,7 @@ sealed interface AddScreenEvent {
     data class StartedAtChanged(val value: Long) : AddScreenEvent
     data class EndedAtChanged(val value: Long) : AddScreenEvent
     data class StorageChanged(val value: StorageType) : AddScreenEvent
+    data object RefreshLocation : AddScreenEvent
     data object Save : AddScreenEvent
 }
 

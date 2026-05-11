@@ -25,6 +25,7 @@ dependencies {
 
     implementation(libs.kotlinx.coroutines.android)
     implementation(libs.kotlinx.coroutines.play.services)
+    implementation(libs.play.services.location)
 
     implementation(libs.androidx.room.runtime)
     implementation(libs.androidx.room.ktx)
