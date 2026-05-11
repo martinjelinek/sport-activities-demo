@@ -7,12 +7,14 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDialog
+import androidx.compose.material3.DatePickerState
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TimePicker
+import androidx.compose.material3.TimePickerState
 import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.material3.rememberTimePickerState
 import androidx.compose.runtime.Composable
@@ -57,54 +59,95 @@ fun DateTimePickerDialog(
         is24Hour = true,
     )
 
-    when (step) {
-        PickerStep.Date -> DatePickerDialog(
-            onDismissRequest = onDismiss,
-            modifier = modifier,
-            confirmButton = {
-                TextButton(
-                    onClick = { step = PickerStep.Time },
-                    enabled = datePickerState.selectedDateMillis != null,
-                ) { Text(stringResource(R.string.add_picker_next)) }
-            },
-            dismissButton = {
-                TextButton(onClick = onDismiss) {
-                    Text(stringResource(R.string.add_picker_cancel))
-                }
-            },
-        ) {
-            DatePicker(
-                state = datePickerState,
-                showModeToggle = true,
-            )
+    val onNext = remember { { step = PickerStep.Time } }
+    val onTimeConfirm = remember(datePickerState, timePickerState, onConfirm) {
+        {
+            val dateUtc = datePickerState.selectedDateMillis
+            if (dateUtc != null) {
+                onConfirm(combineDateAndTime(dateUtc, timePickerState.hour, timePickerState.minute))
+            }
         }
+    }
 
-        PickerStep.Time -> Dialog(onDismissRequest = onDismiss) {
-            Surface(
-                modifier = modifier,
-                shape = MaterialTheme.shapes.large,
-                color = MaterialTheme.colorScheme.surface,
+    when (step) {
+        PickerStep.Date -> DateStep(
+            state = datePickerState,
+            onNext = onNext,
+            onDismiss = onDismiss,
+            modifier = modifier,
+        )
+
+        PickerStep.Time -> TimeStep(
+            state = timePickerState,
+            onConfirm = onTimeConfirm,
+            onDismiss = onDismiss,
+            modifier = modifier,
+        )
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun DateStep(
+    state: DatePickerState,
+    onNext: () -> Unit,
+    onDismiss: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    DatePickerDialog(
+        onDismissRequest = onDismiss,
+        modifier = modifier,
+        confirmButton = {
+            TextButton(
+                onClick = onNext,
+                enabled = state.selectedDateMillis != null,
+            ) { Text(stringResource(R.string.add_picker_next)) }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text(stringResource(R.string.add_picker_cancel))
+            }
+        },
+    ) {
+        DatePicker(
+            state = state,
+            showModeToggle = true,
+        )
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun TimeStep(
+    state: TimePickerState,
+    onConfirm: () -> Unit,
+    onDismiss: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Dialog(onDismissRequest = onDismiss) {
+        Surface(
+            modifier = modifier,
+            shape = MaterialTheme.shapes.large,
+            color = MaterialTheme.colorScheme.surface,
+        ) {
+            Column(
+                modifier = Modifier.padding(24.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp),
             ) {
-                Column(
-                    modifier = Modifier.padding(24.dp),
-                    verticalArrangement = Arrangement.spacedBy(16.dp),
+                Text(
+                    text = stringResource(R.string.add_picker_time_title),
+                    style = MaterialTheme.typography.titleMedium,
+                )
+                TimePicker(state = state)
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.End,
                 ) {
-                    Text(
-                        text = stringResource(R.string.add_picker_time_title),
-                        style = MaterialTheme.typography.titleMedium,
-                    )
-                    TimePicker(state = timePickerState)
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.End,
-                    ) {
-                        TextButton(onClick = onDismiss) {
-                            Text(stringResource(R.string.add_picker_cancel))
-                        }
-                        TextButton(onClick = {
-                            val dateUtc = datePickerState.selectedDateMillis ?: return@TextButton
-                            onConfirm(combineDateAndTime(dateUtc, timePickerState.hour, timePickerState.minute))
-                        }) { Text(stringResource(R.string.add_picker_ok)) }
+                    TextButton(onClick = onDismiss) {
+                        Text(stringResource(R.string.add_picker_cancel))
+                    }
+                    TextButton(onClick = onConfirm) {
+                        Text(stringResource(R.string.add_picker_ok))
                     }
                 }
             }

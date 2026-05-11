@@ -65,7 +65,6 @@ fun AddScreen(
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     var pickerTarget by remember { mutableStateOf<PickerTarget?>(null) }
-    val storageTypes = remember { StorageType.entries }
 
     val currentOnSaved by rememberUpdatedState(onSaved)
     val lifecycle = LocalLifecycleOwner.current.lifecycle
@@ -79,6 +78,30 @@ fun AddScreen(
             }
         }
     }
+
+    val onEvent = remember(viewModel) { viewModel::onEvent }
+    val locationPermission = rememberPermissionState(Manifest.permission.ACCESS_FINE_LOCATION)
+    val onUseMyLocation = remember(locationPermission, onEvent) {
+        {
+            when {
+                locationPermission.status.isGranted ->
+                    onEvent(AddScreenEvent.RefreshLocation)
+                locationPermission.status.shouldShowRationale ->
+                    locationPermission.launchPermissionRequest()
+                else -> locationPermission.launchPermissionRequest()
+            }
+        }
+    }
+    // Once the user grants the permission, immediately fetch — otherwise the
+    // first tap only opens the system prompt and the user has to tap again.
+    LaunchedEffect(locationPermission.status.isGranted) {
+        if (locationPermission.status.isGranted && state.coordinates == null && !state.isResolvingLocation) {
+            onEvent(AddScreenEvent.RefreshLocation)
+        }
+    }
+
+    val onStartedClick = remember { { pickerTarget = PickerTarget.Started } }
+    val onEndedClick = remember { { pickerTarget = PickerTarget.Ended } }
 
     Scaffold(
         modifier = modifier,
@@ -96,145 +119,14 @@ fun AddScreen(
             )
         },
     ) { padding ->
-        Column(
-            modifier = Modifier
-                .padding(padding)
-                .fillMaxSize()
-                .verticalScroll(rememberScrollState())
-                .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp),
-        ) {
-            OutlinedTextField(
-                value = state.name,
-                onValueChange = { viewModel.onEvent(AddScreenEvent.NameChanged(it)) },
-                label = { Text(stringResource(R.string.add_field_name)) },
-                singleLine = true,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .testTag(AddScreenTestTags.NAME_FIELD),
-            )
-            val locationPermission = rememberPermissionState(Manifest.permission.ACCESS_FINE_LOCATION)
-            val onUseMyLocation = remember(locationPermission, viewModel) {
-                {
-                    when {
-                        locationPermission.status.isGranted ->
-                            viewModel.onEvent(AddScreenEvent.RefreshLocation)
-                        locationPermission.status.shouldShowRationale ->
-                            locationPermission.launchPermissionRequest()
-                        else -> locationPermission.launchPermissionRequest()
-                    }
-                }
-            }
-            // Once the user grants the permission, immediately fetch — otherwise the
-            // first tap only opens the system prompt and the user has to tap again.
-            LaunchedEffect(locationPermission.status.isGranted) {
-                if (locationPermission.status.isGranted && state.coordinates == null && !state.isResolvingLocation) {
-                    viewModel.onEvent(AddScreenEvent.RefreshLocation)
-                }
-            }
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                OutlinedTextField(
-                    value = state.location,
-                    readOnly = true,
-                    onValueChange = { viewModel.onEvent(AddScreenEvent.LocationChanged(it)) },
-                    label = { Text(stringResource(R.string.add_field_location)) },
-                    singleLine = true,
-                    modifier = Modifier
-                        .weight(1f)
-                        .testTag(AddScreenTestTags.LOCATION_FIELD),
-                )
-                Spacer(modifier = Modifier.width(8.dp))
-                IconButton(
-                    onClick = onUseMyLocation,
-                    modifier = Modifier
-                        .background(color = MaterialTheme.colorScheme.primary, shape = MaterialTheme.shapes.small)
-                        .testTag(AddScreenTestTags.USE_MY_LOCATION_BUTTON),
-                    enabled = !state.isResolvingLocation,
-                ) {
-                    if (state.isResolvingLocation) {
-                        CircularProgressIndicator(
-                            modifier = Modifier.size(20.dp),
-                            trackColor = MaterialTheme.colorScheme.onPrimary,
-                        )
-                    } else {
-                        Icon(
-                            imageVector = Icons.Default.LocationOn,
-                            tint = MaterialTheme.colorScheme.onPrimary,
-                            contentDescription = stringResource(R.string.add_use_my_location),
-                        )
-                    }
-                }
-            }
-            if (state.hasLocationError) {
-                Text(
-                    text = stringResource(R.string.add_location_error_unavailable),
-                    color = MaterialTheme.colorScheme.error,
-                    style = MaterialTheme.typography.bodySmall,
-                )
-            }
-
-            val startedFormatted = remember(state.startedAt) { formatTimestamp(state.startedAt) }
-            val endedFormatted = remember(state.endedAt) { formatTimestamp(state.endedAt) }
-
-            OutlinedButton(
-                onClick = { pickerTarget = PickerTarget.Started },
-                modifier = Modifier.fillMaxWidth(),
-            ) {
-                Text(
-                    if (state.startedAt == 0L) stringResource(R.string.add_pick_start)
-                    else stringResource(R.string.add_started_at, startedFormatted),
-                )
-            }
-            OutlinedButton(
-                onClick = { pickerTarget = PickerTarget.Ended },
-                modifier = Modifier.fillMaxWidth(),
-            ) {
-                Text(
-                    if (state.endedAt == 0L) stringResource(R.string.add_pick_end)
-                    else stringResource(R.string.add_ended_at, endedFormatted),
-                )
-            }
-            if (state.startedAt != 0L && state.endedAt != 0L && state.endedAt <= state.startedAt) {
-                Text(
-                    text = stringResource(R.string.add_end_before_start_error),
-                    color = MaterialTheme.colorScheme.error,
-                    style = MaterialTheme.typography.bodySmall,
-                )
-            }
-
-            Text(
-                text = stringResource(R.string.add_storage_label),
-                modifier = Modifier.padding(top = 8.dp),
-            )
-            storageTypes.forEach { type ->
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    RadioButton(
-                        selected = state.storage == type,
-                        onClick = { viewModel.onEvent(AddScreenEvent.StorageChanged(type)) },
-                    )
-                    Text(stringResource(type.labelRes()))
-                }
-            }
-
-            state.errorMessage?.let { Text(it, color = MaterialTheme.colorScheme.error) }
-
-            Button(
-                onClick = { viewModel.onEvent(AddScreenEvent.Save) },
-                enabled = state.isSavable,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .testTag(AddScreenTestTags.SAVE_BUTTON),
-            ) {
-                Text(
-                    if (state.isSubmitting) stringResource(R.string.add_button_saving)
-                    else stringResource(R.string.add_button_save),
-                )
-            }
-        }
+        AddScreenContent(
+            state = state,
+            onEvent = onEvent,
+            onUseMyLocation = onUseMyLocation,
+            onStartedClick = onStartedClick,
+            onEndedClick = onEndedClick,
+            modifier = Modifier.padding(padding),
+        )
     }
 
     pickerTarget?.let { target ->
@@ -244,9 +136,9 @@ fun AddScreen(
         }
 
         val onPickerDismiss = remember { { pickerTarget = null } }
-        val onPickerConfirm = remember(target) {
+        val onPickerConfirm = remember(target, onEvent) {
             { picked: Long ->
-                viewModel.onEvent(
+                onEvent(
                     when (target) {
                         PickerTarget.Started -> AddScreenEvent.StartedAtChanged(picked)
                         PickerTarget.Ended -> AddScreenEvent.EndedAtChanged(picked)
@@ -260,6 +152,137 @@ fun AddScreen(
             onConfirm = onPickerConfirm,
             onDismiss = onPickerDismiss,
         )
+    }
+}
+
+@Composable
+private fun AddScreenContent(
+    state: AddScreenUiState,
+    onEvent: (AddScreenEvent) -> Unit,
+    onUseMyLocation: () -> Unit,
+    onStartedClick: () -> Unit,
+    onEndedClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val storageTypes = remember { StorageType.entries }
+    Column(
+        modifier = modifier
+            .fillMaxSize()
+            .verticalScroll(rememberScrollState())
+            .padding(16.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp),
+    ) {
+        OutlinedTextField(
+            value = state.name,
+            onValueChange = { onEvent(AddScreenEvent.NameChanged(it)) },
+            label = { Text(stringResource(R.string.add_field_name)) },
+            singleLine = true,
+            modifier = Modifier
+                .fillMaxWidth()
+                .testTag(AddScreenTestTags.NAME_FIELD),
+        )
+
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            OutlinedTextField(
+                value = state.location,
+                readOnly = true,
+                onValueChange = { onEvent(AddScreenEvent.LocationChanged(it)) },
+                label = { Text(stringResource(R.string.add_field_location)) },
+                singleLine = true,
+                modifier = Modifier
+                    .weight(1f)
+                    .testTag(AddScreenTestTags.LOCATION_FIELD),
+            )
+            Spacer(modifier = Modifier.width(8.dp))
+            IconButton(
+                onClick = onUseMyLocation,
+                modifier = Modifier
+                    .background(color = MaterialTheme.colorScheme.primary, shape = MaterialTheme.shapes.small)
+                    .testTag(AddScreenTestTags.USE_MY_LOCATION_BUTTON),
+                enabled = !state.isResolvingLocation,
+            ) {
+                if (state.isResolvingLocation) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(20.dp),
+                        trackColor = MaterialTheme.colorScheme.onPrimary,
+                    )
+                } else {
+                    Icon(
+                        imageVector = Icons.Default.LocationOn,
+                        tint = MaterialTheme.colorScheme.onPrimary,
+                        contentDescription = stringResource(R.string.add_use_my_location),
+                    )
+                }
+            }
+        }
+        if (state.hasLocationError) {
+            Text(
+                text = stringResource(R.string.add_location_error_unavailable),
+                color = MaterialTheme.colorScheme.error,
+                style = MaterialTheme.typography.bodySmall,
+            )
+        }
+
+        val startedFormatted = remember(state.startedAt) { formatTimestamp(state.startedAt) }
+        val endedFormatted = remember(state.endedAt) { formatTimestamp(state.endedAt) }
+
+        OutlinedButton(
+            onClick = onStartedClick,
+            modifier = Modifier.fillMaxWidth(),
+        ) {
+            Text(
+                if (state.startedAt == 0L) stringResource(R.string.add_pick_start)
+                else stringResource(R.string.add_started_at, startedFormatted),
+            )
+        }
+        OutlinedButton(
+            onClick = onEndedClick,
+            modifier = Modifier.fillMaxWidth(),
+        ) {
+            Text(
+                if (state.endedAt == 0L) stringResource(R.string.add_pick_end)
+                else stringResource(R.string.add_ended_at, endedFormatted),
+            )
+        }
+        if (state.startedAt != 0L && state.endedAt != 0L && state.endedAt <= state.startedAt) {
+            Text(
+                text = stringResource(R.string.add_end_before_start_error),
+                color = MaterialTheme.colorScheme.error,
+                style = MaterialTheme.typography.bodySmall,
+            )
+        }
+
+        Text(
+            text = stringResource(R.string.add_storage_label),
+            modifier = Modifier.padding(top = 8.dp),
+        )
+        storageTypes.forEach { type ->
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                RadioButton(
+                    selected = state.storage == type,
+                    onClick = { onEvent(AddScreenEvent.StorageChanged(type)) },
+                )
+                Text(stringResource(type.labelRes()))
+            }
+        }
+
+        state.errorMessage?.let { Text(it, color = MaterialTheme.colorScheme.error) }
+
+        Button(
+            onClick = { onEvent(AddScreenEvent.Save) },
+            enabled = state.isSavable,
+            modifier = Modifier
+                .fillMaxWidth()
+                .testTag(AddScreenTestTags.SAVE_BUTTON),
+        ) {
+            Text(
+                if (state.isSubmitting) stringResource(R.string.add_button_saving)
+                else stringResource(R.string.add_button_save),
+            )
+        }
     }
 }
 
