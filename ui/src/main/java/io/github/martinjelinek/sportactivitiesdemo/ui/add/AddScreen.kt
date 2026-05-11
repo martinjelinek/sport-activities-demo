@@ -1,35 +1,27 @@
 package io.github.martinjelinek.sportactivitiesdemo.ui.add
 
-import android.Manifest
 import androidx.annotation.StringRes
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.selection.selectableGroup
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.DirectionsBike
 import androidx.compose.material.icons.automirrored.filled.DirectionsRun
-import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Pool
 import androidx.compose.material3.Button
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -51,10 +43,6 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.flowWithLifecycle
-import com.google.accompanist.permissions.ExperimentalPermissionsApi
-import com.google.accompanist.permissions.isGranted
-import com.google.accompanist.permissions.rememberPermissionState
-import com.google.accompanist.permissions.shouldShowRationale
 import io.github.martinjelinek.sportactivitiesdemo.domain.model.SportType
 import io.github.martinjelinek.sportactivitiesdemo.domain.model.StorageType
 import io.github.martinjelinek.sportactivitiesdemo.ui.R
@@ -63,7 +51,7 @@ import io.github.martinjelinek.sportactivitiesdemo.ui.components.ImageCard
 import io.github.martinjelinek.sportactivitiesdemo.ui.components.PickerTarget
 import io.github.martinjelinek.sportactivitiesdemo.util.formatTimestamp
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalPermissionsApi::class)
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AddScreen(
     onSaved: (StorageType) -> Unit,
@@ -88,26 +76,6 @@ fun AddScreen(
     }
 
     val onEvent = remember(viewModel) { viewModel::onEvent }
-    val locationPermission = rememberPermissionState(Manifest.permission.ACCESS_FINE_LOCATION)
-    val onUseMyLocation = remember(locationPermission, onEvent) {
-        {
-            when {
-                locationPermission.status.isGranted ->
-                    onEvent(AddScreenEvent.RefreshLocation)
-                locationPermission.status.shouldShowRationale ->
-                    locationPermission.launchPermissionRequest()
-                else -> locationPermission.launchPermissionRequest()
-            }
-        }
-    }
-    // Once the user grants the permission, immediately fetch — otherwise the
-    // first tap only opens the system prompt and the user has to tap again.
-    LaunchedEffect(locationPermission.status.isGranted) {
-        if (locationPermission.status.isGranted && state.coordinates == null && !state.isResolvingLocation) {
-            onEvent(AddScreenEvent.RefreshLocation)
-        }
-    }
-
     val onStartedClick = remember { { pickerTarget = PickerTarget.Started } }
     val onEndedClick = remember { { pickerTarget = PickerTarget.Ended } }
 
@@ -130,7 +98,6 @@ fun AddScreen(
         AddScreenContent(
             state = state,
             onEvent = onEvent,
-            onUseMyLocation = onUseMyLocation,
             onStartedClick = onStartedClick,
             onEndedClick = onEndedClick,
             modifier = Modifier.padding(padding),
@@ -167,7 +134,6 @@ fun AddScreen(
 private fun AddScreenContent(
     state: AddScreenUiState,
     onEvent: (AddScreenEvent) -> Unit,
-    onUseMyLocation: () -> Unit,
     onStartedClick: () -> Unit,
     onEndedClick: () -> Unit,
     modifier: Modifier = Modifier,
@@ -186,50 +152,6 @@ private fun AddScreenContent(
             onSelect = onSportSelect,
             modifier = Modifier.fillMaxWidth(),
         )
-
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            OutlinedTextField(
-                value = state.location,
-                readOnly = true,
-                onValueChange = { onEvent(AddScreenEvent.LocationChanged(it)) },
-                label = { Text(stringResource(R.string.add_field_location)) },
-                singleLine = true,
-                modifier = Modifier
-                    .weight(1f)
-                    .testTag(AddScreenTestTags.LOCATION_FIELD),
-            )
-            Spacer(modifier = Modifier.width(8.dp))
-            IconButton(
-                onClick = onUseMyLocation,
-                modifier = Modifier
-                    .background(color = MaterialTheme.colorScheme.primary, shape = MaterialTheme.shapes.small)
-                    .testTag(AddScreenTestTags.USE_MY_LOCATION_BUTTON),
-                enabled = !state.isResolvingLocation,
-            ) {
-                if (state.isResolvingLocation) {
-                    CircularProgressIndicator(
-                        modifier = Modifier.size(20.dp),
-                        trackColor = MaterialTheme.colorScheme.onPrimary,
-                    )
-                } else {
-                    Icon(
-                        imageVector = Icons.Default.LocationOn,
-                        tint = MaterialTheme.colorScheme.onPrimary,
-                        contentDescription = stringResource(R.string.add_use_my_location),
-                    )
-                }
-            }
-        }
-        if (state.hasLocationError) {
-            Text(
-                text = stringResource(R.string.add_location_error_unavailable),
-                color = MaterialTheme.colorScheme.error,
-                style = MaterialTheme.typography.bodySmall,
-            )
-        }
 
         val startedFormatted = remember(state.startedAt) { formatTimestamp(state.startedAt) }
         val endedFormatted = remember(state.endedAt) { formatTimestamp(state.endedAt) }
@@ -357,7 +279,5 @@ internal object AddScreenTestTags {
     const val SPORT_CARD_RUN = "add_sport_card_run"
     const val SPORT_CARD_BIKE = "add_sport_card_bike"
     const val SPORT_CARD_SWIM = "add_sport_card_swim"
-    const val LOCATION_FIELD = "add_location_field"
-    const val USE_MY_LOCATION_BUTTON = "add_use_my_location_button"
     const val SAVE_BUTTON = "add_save_button"
 }
