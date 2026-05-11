@@ -21,6 +21,17 @@ android {
     }
     kotlinOptions { jvmTarget = "11" }
     buildFeatures { compose = true }
+
+    packaging {
+        resources {
+            // Several test deps (JUnit, MockK, Hamcrest) ship duplicate
+            // META-INF/LICENSE files; exclude them from the test APK.
+            excludes += setOf(
+                "META-INF/LICENSE.md",
+                "META-INF/LICENSE-notice.md",
+            )
+        }
+    }
 }
 
 dependencies {
@@ -28,9 +39,10 @@ dependencies {
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
+    implementation(libs.androidx.lifecycle.runtime.compose)
     implementation(libs.androidx.lifecycle.viewmodel.compose)
     implementation(libs.androidx.activity.compose)
-    implementation(libs.androidx.navigation.compose)
+    api(libs.androidx.navigation.compose)
     implementation(libs.androidx.hilt.navigation.compose)
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.compose.ui)
@@ -56,5 +68,5 @@ dependencies {
     androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation(platform(libs.androidx.compose.bom))
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)
-    androidTestImplementation(libs.mockk)
+    androidTestImplementation(libs.mockk.android)
 }
