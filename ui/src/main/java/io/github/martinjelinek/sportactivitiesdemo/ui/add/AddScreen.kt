@@ -180,16 +180,25 @@ fun AddScreen(
             PickerTarget.Started -> state.startedAt
             PickerTarget.Ended -> state.endedAt
         }
+
+        val onPickerDismiss = remember {
+            { pickerTarget = null }
+        }
+        val onPickerConfirm = remember(target) {
+            { picked: Long ->
+                viewModel.onEvent(
+                    when (target) {
+                        PickerTarget.Started -> AddScreenEvent.StartedAtChanged(picked)
+                        PickerTarget.Ended -> AddScreenEvent.EndedAtChanged(picked)
+                    },
+                )
+                pickerTarget = null
+            }
+        }
         DateTimePickerDialog(
             initialMillis = initial,
-            onConfirm = { picked ->
-                when (target) {
-                    PickerTarget.Started -> viewModel.onEvent(AddScreenEvent.StartedAtChanged(picked))
-                    PickerTarget.Ended -> viewModel.onEvent(AddScreenEvent.EndedAtChanged(picked))
-                }
-                pickerTarget = null
-            },
-            onDismiss = { pickerTarget = null },
+            onConfirm = onPickerConfirm,
+            onDismiss = onPickerDismiss,
         )
     }
 }
@@ -210,8 +219,10 @@ private fun DateTimePickerDialog(
     initialMillis: Long,
     onConfirm: (Long) -> Unit,
     onDismiss: () -> Unit,
+    modifier: Modifier = Modifier,
 ) {
     var step by remember { mutableStateOf(PickerStep.Date) }
+
     // Capture seed once per initialMillis. Without remember, System.currentTimeMillis()
     // is evaluated bare on every recomposition and can drift under rememberDatePickerState.
     val seed = remember(initialMillis) {
@@ -228,6 +239,7 @@ private fun DateTimePickerDialog(
     when (step) {
         PickerStep.Date -> DatePickerDialog(
             onDismissRequest = onDismiss,
+            modifier = modifier,
             confirmButton = {
                 TextButton(
                     onClick = { step = PickerStep.Time },
@@ -245,6 +257,7 @@ private fun DateTimePickerDialog(
 
         PickerStep.Time -> Dialog(onDismissRequest = onDismiss) {
             Surface(
+                modifier = modifier,
                 shape = MaterialTheme.shapes.large,
                 color = MaterialTheme.colorScheme.surface,
             ) {
