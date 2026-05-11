@@ -28,9 +28,11 @@ class ListScreenViewModelTest {
     @After fun tearDown() { Dispatchers.resetMain() }
 
     private val item = SportActivity(
+        id = "id-1",
         name = "Run", location = "Park",
         startedAt = 0L, endedAt = 1000L,
         storage = StorageType.LOCAL,
+        createdAt = 0L,
     )
 
     @Test
