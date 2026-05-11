@@ -21,12 +21,12 @@ class SportActivityRepositoryImplTest {
     private val sut = SportActivityRepositoryImpl(local, remote)
 
     private val localItem = SportActivity(
-        id = "l1", name = "Run", location = "Park",
+        id = "l1", name = "Run",
         startedAt = 0L, endedAt = 1000L,
         storage = StorageType.LOCAL, createdAt = 100L,
     )
     private val remoteItem = SportActivity(
-        id = "r1", name = "Bike", location = "Road",
+        id = "r1", name = "Bike",
         startedAt = 0L, endedAt = 2000L,
         storage = StorageType.REMOTE, createdAt = 200L,
     )

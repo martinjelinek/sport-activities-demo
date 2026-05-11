@@ -57,7 +57,6 @@ class AddScreenViewModel @Inject constructor(
             val sportActivity = SportActivity(
                 id = idGenerator.next(),
                 name = sport.displayName,
-                location = "",
                 startedAt = s.startedAt,
                 endedAt = s.endedAt,
                 storage = s.storage,

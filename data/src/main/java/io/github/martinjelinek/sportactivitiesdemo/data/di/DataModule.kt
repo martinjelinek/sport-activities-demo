@@ -24,7 +24,10 @@ object DataModule {
     @Provides
     @Singleton
     fun provideDatabase(@ApplicationContext ctx: Context): SportActivityDatabase =
-        Room.databaseBuilder(ctx, SportActivityDatabase::class.java, DATABASE_NAME).build()
+        Room.databaseBuilder(ctx, SportActivityDatabase::class.java, DATABASE_NAME)
+            // Demo app — wiping local data on schema change is fine; no migration code to maintain.
+            .fallbackToDestructiveMigration()
+            .build()
 
     @Provides
     fun provideDao(db: SportActivityDatabase): SportActivityDao = db.sportActivityDao()

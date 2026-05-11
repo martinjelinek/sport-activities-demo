@@ -135,7 +135,6 @@ private fun ActivityRow(item: SportActivity) {
                 Text(item.name, style = MaterialTheme.typography.titleMedium)
                 StorageTypeChip(item.storage)
             }
-            Text(item.location, style = MaterialTheme.typography.bodyMedium)
             Text(item.durationMillis.formatDuration(), style = MaterialTheme.typography.bodySmall)
         }
     }
