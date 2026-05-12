@@ -1,31 +1,36 @@
 package io.github.martinjelinek.sportactivitiesdemo.ui.add
 
-import io.github.martinjelinek.sportactivitiesdemo.domain.model.Coordinates
+import io.github.martinjelinek.sportactivitiesdemo.domain.model.SportType
 import io.github.martinjelinek.sportactivitiesdemo.domain.model.StorageType
 
-data class AddScreenUiState(
-    val name: String = "",
+internal data class AddScreenUiState(
+    val sport: SportType? = null,
     val location: String = "",
-    val coordinates: Coordinates? = null,
-    val isResolvingLocation: Boolean = false,
-    val hasLocationError: Boolean = false,
     val startedAt: Long = 0L,
     val endedAt: Long = 0L,
     val storage: StorageType = StorageType.LOCAL,
     val isSubmitting: Boolean = false, // prevents double submit
     val errorMessage: String? = null,
 ) {
+
+    // Just a derivation, not business logic. Keep in the state for easy access.
     val isSavable: Boolean
-        get() = name.isNotBlank() && location.isNotBlank() && endedAt > startedAt && !isSubmitting
+        get() = sport != null && endedAt > startedAt && !isSubmitting
+
+    // The `0L` guards keep the default-constructed state silent: a freshly built
+    // `AddScreenUiState()` (e.g. from a preview or test that doesn't go through
+    // the VM) shouldn't surface a validation error before the user has had a
+    // chance to pick anything.
+    val isEndNotAfterStart: Boolean
+        get() = startedAt != 0L && endedAt != 0L && endedAt <= startedAt
 }
 
-sealed interface AddScreenEvent {
-    data class NameChanged(val value: String) : AddScreenEvent
+internal sealed interface AddScreenEvent {
+    data class SportSelected(val value: SportType) : AddScreenEvent
     data class LocationChanged(val value: String) : AddScreenEvent
     data class StartedAtChanged(val value: Long) : AddScreenEvent
     data class EndedAtChanged(val value: Long) : AddScreenEvent
     data class StorageChanged(val value: StorageType) : AddScreenEvent
-    data object RefreshLocation : AddScreenEvent
     data object Save : AddScreenEvent
 }
 
@@ -34,6 +39,6 @@ sealed interface AddScreenEvent {
  * Delivered through a [Channel] so each event is consumed
  * exactly once and survives configuration changes.
  */
-sealed interface AddScreenEffect {
+internal sealed interface AddScreenEffect {
     data class Saved(val storage: StorageType) : AddScreenEffect
 }

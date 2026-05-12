@@ -3,7 +3,7 @@ package io.github.martinjelinek.sportactivitiesdemo.data.remote
 import io.github.martinjelinek.sportactivitiesdemo.domain.model.SportActivity
 import io.github.martinjelinek.sportactivitiesdemo.domain.model.StorageType
 
-data class SportActivityDto(
+internal data class SportActivityDto(
     val id: String = "",
     val name: String = "",
     val location: String = "",
@@ -12,7 +12,7 @@ data class SportActivityDto(
     val createdAt: Long = 0L,
 )
 
-fun SportActivityDto.toDomain() = SportActivity(
+internal fun SportActivityDto.toDomain() = SportActivity(
     id = id,
     name = name,
     location = location,
@@ -22,7 +22,7 @@ fun SportActivityDto.toDomain() = SportActivity(
     createdAt = createdAt,
 )
 
-fun SportActivity.toDto() = SportActivityDto(
+internal fun SportActivity.toDto() = SportActivityDto(
     id = id,
     name = name,
     location = location,

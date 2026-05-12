@@ -7,18 +7,21 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.annotation.StringRes
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
@@ -30,27 +33,28 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.martinjelinek.sportactivitiesdemo.domain.model.SportActivity
+import io.github.martinjelinek.sportactivitiesdemo.domain.model.SportType
 import io.github.martinjelinek.sportactivitiesdemo.domain.model.StorageType
 import io.github.martinjelinek.sportactivitiesdemo.ui.R
 import io.github.martinjelinek.sportactivitiesdemo.ui.components.FilterChips
 import io.github.martinjelinek.sportactivitiesdemo.ui.components.StorageTypeChip
+import io.github.martinjelinek.sportactivitiesdemo.ui.theme.SportActivitiesDemoTheme
+import io.github.martinjelinek.sportactivitiesdemo.ui.theme.containerColor
+import io.github.martinjelinek.sportactivitiesdemo.ui.theme.onContainerColor
 import io.github.martinjelinek.sportactivitiesdemo.util.formatDuration
-import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-
-// Top-level (not `remember` in the default param) so the slot lives in ListScreen, not the caller
-private val EmptySavedToSignal: StateFlow<String?> = MutableStateFlow(null)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ListScreen(
+internal fun ListScreen(
     onAddClick: () -> Unit,
+    savedToSignal: StateFlow<String?>,
     modifier: Modifier = Modifier,
-    savedToSignal: StateFlow<String?> = EmptySavedToSignal,
     onSignalConsumed: () -> Unit = {},
     viewModel: ListScreenViewModel = hiltViewModel(),
 ) {
@@ -129,14 +133,92 @@ fun ListScreen(
 
 @Composable
 private fun ActivityRow(item: SportActivity) {
-    Card(modifier = Modifier.fillMaxWidth()) {
+    val sportType = remember(item.name) {
+        SportType.entries.firstOrNull { it.name == item.name }
+    }
+    val displayNameRes = remember(sportType) { sportType?.displayNameRes() }
+    val displayName = displayNameRes?.let { stringResource(it) } ?: item.name
+    val cardContainer = sportType?.containerColor() ?: MaterialTheme.colorScheme.surfaceVariant
+    val cardContent = sportType?.onContainerColor ?: MaterialTheme.colorScheme.onSurfaceVariant
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(containerColor = cardContainer, contentColor = cardContent),
+    ) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                Text(item.name, style = MaterialTheme.typography.titleMedium)
+                Text(displayName, style = MaterialTheme.typography.titleMedium)
                 StorageTypeChip(item.storage)
             }
-            Text(item.location, style = MaterialTheme.typography.bodyMedium)
+            if (item.location.isNotBlank()) {
+                Text(item.location, style = MaterialTheme.typography.bodySmall)
+            }
             Text(item.durationMillis.formatDuration(), style = MaterialTheme.typography.bodySmall)
+        }
+    }
+}
+
+@StringRes
+private fun SportType.displayNameRes(): Int = when (this) {
+    SportType.RUN -> R.string.activity_run
+    SportType.BIKE -> R.string.activity_bike
+    SportType.SWIM -> R.string.activity_swim
+}
+
+private fun previewActivity(
+    id: String,
+    name: String,
+    location: String,
+    durationMinutes: Int,
+    storage: StorageType,
+) = SportActivity(
+    id = id,
+    name = name,
+    location = location,
+    startedAt = 0L,
+    endedAt = durationMinutes * 60L * 1000L,
+    storage = storage,
+    createdAt = 0L,
+)
+
+@PreviewLightDark
+@Composable
+private fun ActivityRowPreviewRun() {
+    SportActivitiesDemoTheme {
+        Surface(Modifier.padding(16.dp)) {
+            ActivityRow(previewActivity("1", "RUN", "Stromovka", 32, StorageType.LOCAL))
+        }
+    }
+}
+
+@PreviewLightDark
+@Composable
+private fun ActivityRowPreviewBikeNoLocation() {
+    SportActivitiesDemoTheme {
+        Surface(Modifier.padding(16.dp)) {
+            ActivityRow(previewActivity("2", "BIKE", "", 60, StorageType.REMOTE))
+        }
+    }
+}
+
+@PreviewLightDark
+@Composable
+private fun ActivityRowPreviewSwim() {
+    SportActivitiesDemoTheme {
+        Surface(Modifier.padding(16.dp)) {
+            ActivityRow(previewActivity("3", "SWIM", "Hotel pool", 45, StorageType.LOCAL))
+        }
+    }
+}
+
+@PreviewLightDark
+@Composable
+private fun ActivityRowPreviewLegacyName() {
+    // Legacy row written before commit 2074890: `name` holds the old display
+    // string instead of the enum identifier, so SportType lookup falls back
+    // to default Card color and the raw name renders as the title.
+    SportActivitiesDemoTheme {
+        Surface(Modifier.padding(16.dp)) {
+            ActivityRow(previewActivity("4", "Run", "", 30, StorageType.LOCAL))
         }
     }
 }

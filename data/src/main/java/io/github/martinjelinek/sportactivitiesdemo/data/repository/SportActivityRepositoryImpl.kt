@@ -10,7 +10,7 @@ import javax.inject.Inject
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 
-class SportActivityRepositoryImpl @Inject constructor(
+internal class SportActivityRepositoryImpl @Inject constructor(
     private val local: LocalDataSource,
     private val remote: RemoteDataSource,
 ) : SportActivityRepository {

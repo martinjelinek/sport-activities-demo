@@ -15,7 +15,7 @@ import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.tasks.await
 
 @Singleton
-class FirestoreRemoteDataSource @Inject constructor(
+internal class FirestoreRemoteDataSource @Inject constructor(
     private val firestore: FirebaseFirestore,
     private val auth: FirebaseAuth,
 ) : RemoteDataSource {

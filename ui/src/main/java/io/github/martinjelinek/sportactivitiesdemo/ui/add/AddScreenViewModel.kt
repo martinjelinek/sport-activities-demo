@@ -4,7 +4,6 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import io.github.martinjelinek.sportactivitiesdemo.domain.IdGenerator
-import io.github.martinjelinek.sportactivitiesdemo.domain.location.LocationProvider
 import io.github.martinjelinek.sportactivitiesdemo.domain.model.SportActivity
 import io.github.martinjelinek.sportactivitiesdemo.domain.repository.SportActivityRepository
 import java.time.Clock
@@ -19,11 +18,10 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 @HiltViewModel
-class AddScreenViewModel @Inject constructor(
+internal class AddScreenViewModel @Inject constructor(
     private val repository: SportActivityRepository,
     private val clock: Clock,
     private val idGenerator: IdGenerator,
-    private val locationProvider: LocationProvider,
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(
@@ -41,52 +39,26 @@ class AddScreenViewModel @Inject constructor(
 
     fun onEvent(event: AddScreenEvent) {
         when (event) {
-            is AddScreenEvent.NameChanged -> _state.update { it.copy(name = event.value) }
+            is AddScreenEvent.SportSelected -> _state.update { it.copy(sport = event.value) }
             is AddScreenEvent.LocationChanged -> _state.update { it.copy(location = event.value) }
             is AddScreenEvent.StartedAtChanged -> _state.update { it.copy(startedAt = event.value) }
             is AddScreenEvent.EndedAtChanged -> _state.update { it.copy(endedAt = event.value) }
             is AddScreenEvent.StorageChanged -> _state.update { it.copy(storage = event.value) }
-            AddScreenEvent.RefreshLocation -> refreshLocation()
             AddScreenEvent.Save -> save()
-        }
-    }
-
-    private fun refreshLocation() {
-        _state.update { it.copy(isResolvingLocation = true, hasLocationError = false) }
-        viewModelScope.launch {
-            val coords = locationProvider.currentCoordinates()
-            if (coords == null) {
-                _state.update {
-                    it.copy(
-                        isResolvingLocation = false,
-                        hasLocationError = true,
-                    )
-                }
-                return@launch
-            }
-            val resolved = locationProvider.getLocationDescription(coords)
-            _state.update {
-                // Don't clobber a manual edit — the coordinates still update so the
-                val nextLocation = if (it.location.isBlank() && !resolved.isNullOrBlank()) resolved else it.location
-                it.copy(
-                    coordinates = coords,
-                    location = nextLocation,
-                    isResolvingLocation = false,
-                    hasLocationError = false,
-                )
-            }
         }
     }
 
     private fun save() {
         val s = _state.value
         if (!s.isSavable) return
+        // isSavable guarantees sport is non-null
+        val sport = checkNotNull(s.sport)
         _state.update { it.copy(isSubmitting = true, errorMessage = null) }
         viewModelScope.launch {
             val sportActivity = SportActivity(
                 id = idGenerator.next(),
-                name = s.name.trim(),
-                location = s.location.trim(),
+                name = sport.name,
+                location = s.location,
                 startedAt = s.startedAt,
                 endedAt = s.endedAt,
                 storage = s.storage,

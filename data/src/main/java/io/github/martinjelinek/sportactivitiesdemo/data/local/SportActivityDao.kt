@@ -7,7 +7,7 @@ import androidx.room.Query
 import kotlinx.coroutines.flow.Flow
 
 @Dao
-interface SportActivityDao {
+internal interface SportActivityDao {
     @Query("SELECT * FROM sport_activity ORDER BY createdAt DESC")
     fun observeAll(): Flow<List<SportActivityEntity>>
 

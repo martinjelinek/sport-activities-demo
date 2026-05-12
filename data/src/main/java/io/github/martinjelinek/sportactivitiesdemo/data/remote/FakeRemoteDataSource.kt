@@ -8,7 +8,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 
 @Singleton
-class FakeRemoteDataSource @Inject constructor() : RemoteDataSource {
+internal class FakeRemoteDataSource @Inject constructor() : RemoteDataSource {
     private val items = MutableStateFlow<List<SportActivity>>(emptyList())
 
     override fun observe() = items.asStateFlow()

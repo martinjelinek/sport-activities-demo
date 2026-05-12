@@ -3,9 +3,8 @@ package io.github.martinjelinek.sportactivitiesdemo.ui.add
 import app.cash.turbine.test
 import com.google.common.truth.Truth.assertThat
 import io.github.martinjelinek.sportactivitiesdemo.domain.IdGenerator
-import io.github.martinjelinek.sportactivitiesdemo.domain.location.LocationProvider
-import io.github.martinjelinek.sportactivitiesdemo.domain.model.Coordinates
 import io.github.martinjelinek.sportactivitiesdemo.domain.model.SportActivity
+import io.github.martinjelinek.sportactivitiesdemo.domain.model.SportType
 import io.github.martinjelinek.sportactivitiesdemo.domain.model.StorageType
 import io.github.martinjelinek.sportactivitiesdemo.domain.repository.SportActivityRepository
 import io.mockk.coEvery
@@ -32,9 +31,8 @@ class AddScreenViewModelTest {
     private val repo: SportActivityRepository = mockk()
     private val clock: Clock = Clock.fixed(Instant.ofEpochMilli(FIXED_NOW), ZoneOffset.UTC)
     private val idGenerator = IdGenerator { FIXED_ID }
-    private val locationProvider: LocationProvider = mockk(relaxed = true)
 
-    private fun newVm() = AddScreenViewModel(repo, clock, idGenerator, locationProvider)
+    private fun newVm() = AddScreenViewModel(repo, clock, idGenerator)
 
     @Before fun setUp() { Dispatchers.setMain(UnconfinedTestDispatcher()) }
     @After fun tearDown() { Dispatchers.resetMain() }
@@ -47,12 +45,11 @@ class AddScreenViewModelTest {
     }
 
     @Test
-    fun `isSavable requires non-blank name and location`() = runTest {
+    fun `isSavable requires a sport`() = runTest {
         val vm = newVm()
         // Times are already valid after init.
         assertThat(vm.state.value.isSavable).isFalse()
-        vm.onEvent(AddScreenEvent.NameChanged("Run"))
-        vm.onEvent(AddScreenEvent.LocationChanged("Park"))
+        vm.onEvent(AddScreenEvent.SportSelected(SportType.RUN))
         assertThat(vm.state.value.isSavable).isTrue()
     }
 
@@ -63,8 +60,8 @@ class AddScreenViewModelTest {
 
         val vm = newVm()
         vm.effects.test {
-            vm.onEvent(AddScreenEvent.NameChanged("Run"))
-            vm.onEvent(AddScreenEvent.LocationChanged("Park"))
+            vm.onEvent(AddScreenEvent.SportSelected(SportType.RUN))
+            vm.onEvent(AddScreenEvent.LocationChanged("Stromovka"))
             vm.onEvent(AddScreenEvent.StorageChanged(StorageType.REMOTE))
             vm.onEvent(AddScreenEvent.Save)
 
@@ -73,7 +70,8 @@ class AddScreenViewModelTest {
         }
 
         coVerify { repo.save(any()) }
-        assertThat(captured.captured.name).isEqualTo("Run")
+        assertThat(captured.captured.name).isEqualTo(SportType.RUN.name)
+        assertThat(captured.captured.location).isEqualTo("Stromovka")
         assertThat(captured.captured.storage).isEqualTo(StorageType.REMOTE)
         assertThat(captured.captured.id).isEqualTo(FIXED_ID)
         assertThat(captured.captured.createdAt).isEqualTo(FIXED_NOW)
@@ -84,61 +82,13 @@ class AddScreenViewModelTest {
         coEvery { repo.save(any()) } returns Result.failure(RuntimeException("boom"))
         val vm = newVm()
         vm.effects.test {
-            vm.onEvent(AddScreenEvent.NameChanged("Run"))
-            vm.onEvent(AddScreenEvent.LocationChanged("Park"))
+            vm.onEvent(AddScreenEvent.SportSelected(SportType.RUN))
             vm.onEvent(AddScreenEvent.Save)
             advanceUntilIdle()
 
             expectNoEvents()
         }
         assertThat(vm.state.value.errorMessage).isEqualTo("boom")
-    }
-
-    @Test
-    fun `RefreshLocation success populates coordinates and reverse-geocoded location`() = runTest {
-        val coords = Coordinates(50.0871, 14.4213)
-        coEvery { locationProvider.currentCoordinates() } returns coords
-        coEvery { locationProvider.getLocationDescription(coords) } returns "Prague, Czechia"
-
-        val vm = newVm()
-        vm.onEvent(AddScreenEvent.RefreshLocation)
-        advanceUntilIdle()
-
-        val s = vm.state.value
-        assertThat(s.coordinates).isEqualTo(coords)
-        assertThat(s.location).isEqualTo("Prague, Czechia")
-        assertThat(s.isResolvingLocation).isFalse()
-        assertThat(s.hasLocationError).isFalse()
-    }
-
-    @Test
-    fun `RefreshLocation when provider returns null sets hasLocationError`() = runTest {
-        coEvery { locationProvider.currentCoordinates() } returns null
-
-        val vm = newVm()
-        vm.onEvent(AddScreenEvent.RefreshLocation)
-        advanceUntilIdle()
-
-        val s = vm.state.value
-        assertThat(s.coordinates).isNull()
-        assertThat(s.isResolvingLocation).isFalse()
-        assertThat(s.hasLocationError).isTrue()
-    }
-
-    @Test
-    fun `RefreshLocation does not overwrite user-edited location`() = runTest {
-        val coords = Coordinates(50.0871, 14.4213)
-        coEvery { locationProvider.currentCoordinates() } returns coords
-        coEvery { locationProvider.getLocationDescription(coords) } returns "Prague, Czechia"
-
-        val vm = newVm()
-        vm.onEvent(AddScreenEvent.LocationChanged("My garden"))
-        vm.onEvent(AddScreenEvent.RefreshLocation)
-        advanceUntilIdle()
-
-        // User-typed text wins; coordinates still update so the map can show the pin.
-        assertThat(vm.state.value.location).isEqualTo("My garden")
-        assertThat(vm.state.value.coordinates).isEqualTo(coords)
     }
 
     private companion object {
