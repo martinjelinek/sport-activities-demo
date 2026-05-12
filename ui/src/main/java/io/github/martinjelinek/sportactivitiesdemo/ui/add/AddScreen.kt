@@ -74,8 +74,8 @@ fun AddScreen(
     val lifecycle = LocalLifecycleOwner.current.lifecycle
     LaunchedEffect(viewModel, lifecycle) {
         // flowWithLifecycle pauses collection below STARTED so onSaved (which triggers
-        // navigation) can't fire while the host isn't RESUMED. Buffered effects in the
-        // Channel are delivered when collection resumes.
+        // navigation) can't fire while the host isn't at least STARTED. Buffered effects
+        // in the Channel are delivered when collection resumes.
         viewModel.effects.flowWithLifecycle(lifecycle).collect { effect ->
             when (effect) {
                 is AddScreenEffect.Saved -> currentOnSaved(effect.storage)
@@ -199,8 +199,7 @@ private fun AddScreenContent(
                 else stringResource(R.string.add_ended_at, endedFormatted),
             )
         }
-        // TODO this should be handled in the VM
-        if (state.startedAt != 0L && state.endedAt != 0L && state.endedAt <= state.startedAt) {
+        if (state.isEndNotAfterStart) {
             Text(
                 text = stringResource(R.string.add_end_before_start_error),
                 color = MaterialTheme.colorScheme.error,

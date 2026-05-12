@@ -16,6 +16,13 @@ data class AddScreenUiState(
     // Just a derivation, not business logic. Keep in the state for easy access.
     val isSavable: Boolean
         get() = sport != null && endedAt > startedAt && !isSubmitting
+
+    // The `0L` guards keep the default-constructed state silent: a freshly built
+    // `AddScreenUiState()` (e.g. from a preview or test that doesn't go through
+    // the VM) shouldn't surface a validation error before the user has had a
+    // chance to pick anything.
+    val isEndNotAfterStart: Boolean
+        get() = startedAt != 0L && endedAt != 0L && endedAt <= startedAt
 }
 
 sealed interface AddScreenEvent {
