@@ -62,4 +62,21 @@ class ListScreenViewModelTest {
             assertThat(expectMostRecentItem().filter).isEqualTo(StorageType.LOCAL)
         }
     }
+
+    @Test
+    fun `selecting the already-selected filter does not put state in permanent loading`() = runTest {
+        // Regression: tapping the currently-selected chip used to flip isLoading=true
+        // but distinctUntilChanged() upstream of flatMapLatest dropped the redundant
+        // filter emission, so isLoading was never flipped back to false.
+        every { repo.observe(null) } returns flowOf(listOf(item))
+        val vm = ListScreenViewModel(repo)
+
+        vm.onEvent(ListScreenEvent.FilterSelected(null))
+
+        vm.state.test {
+            val state = expectMostRecentItem()
+            assertThat(state.filter).isNull()
+            assertThat(state.isLoading).isFalse()
+        }
+    }
 }
