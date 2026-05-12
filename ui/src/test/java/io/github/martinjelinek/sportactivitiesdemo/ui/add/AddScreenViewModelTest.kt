@@ -38,10 +38,10 @@ class AddScreenViewModelTest {
     @After fun tearDown() { Dispatchers.resetMain() }
 
     @Test
-    fun `init seeds startedAt to now and endedAt to now plus default duration`() = runTest {
+    fun `init seeds endedAt to now and startedAt to now minus default duration`() = runTest {
         val vm = newVm()
-        assertThat(vm.state.value.startedAt).isEqualTo(FIXED_NOW)
-        assertThat(vm.state.value.endedAt).isEqualTo(FIXED_NOW + DEFAULT_DURATION_MS)
+        assertThat(vm.state.value.startedAt).isEqualTo(FIXED_NOW - DEFAULT_DURATION_MS)
+        assertThat(vm.state.value.endedAt).isEqualTo(FIXED_NOW)
     }
 
     @Test

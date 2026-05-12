@@ -25,10 +25,12 @@ internal class AddScreenViewModel @Inject constructor(
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(
-        AddScreenUiState(
-            startedAt = clock.millis(),
-            endedAt = clock.millis() + DEFAULT_DURATION_MS,
-        ),
+        clock.millis().let { now ->
+            AddScreenUiState(
+                startedAt = now - DEFAULT_DURATION_MS,
+                endedAt = now,
+            )
+        },
     )
     val state: StateFlow<AddScreenUiState> = _state.asStateFlow()
 
