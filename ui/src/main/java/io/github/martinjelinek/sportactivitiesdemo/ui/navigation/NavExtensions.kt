@@ -8,7 +8,7 @@ import androidx.navigation.NavController
  *
  * The previous screen reads the value via `savedStateHandle.getStateFlow(key, null)`.
  */
-fun <T : Any> NavController.deliverResultAndGoBack(key: String, value: T) {
+internal fun <T : Any> NavController.deliverResultAndGoBack(key: String, value: T) {
     previousBackStackEntry?.savedStateHandle?.set(key, value)
     popBackStack()
 }

@@ -6,7 +6,7 @@ import io.github.martinjelinek.sportactivitiesdemo.domain.model.SportActivity
 import io.github.martinjelinek.sportactivitiesdemo.domain.model.StorageType
 
 @Entity(tableName = "sport_activity")
-data class SportActivityEntity(
+internal data class SportActivityEntity(
     @PrimaryKey val id: String,
     val name: String,
     val location: String,
@@ -15,7 +15,7 @@ data class SportActivityEntity(
     val createdAt: Long,
 )
 
-fun SportActivityEntity.toDomain() = SportActivity(
+internal fun SportActivityEntity.toDomain() = SportActivity(
     id = id,
     name = name,
     location = location,
@@ -25,7 +25,7 @@ fun SportActivityEntity.toDomain() = SportActivity(
     createdAt = createdAt,
 )
 
-fun SportActivity.toEntity() = SportActivityEntity(
+internal fun SportActivity.toEntity() = SportActivityEntity(
     id = id,
     name = name,
     location = location,

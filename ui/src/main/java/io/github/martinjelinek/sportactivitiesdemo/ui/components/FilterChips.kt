@@ -21,7 +21,7 @@ import io.github.martinjelinek.sportactivitiesdemo.ui.theme.SportActivitiesDemoT
 private val FILTER_OPTIONS: List<StorageType?> = listOf(null, StorageType.LOCAL, StorageType.REMOTE)
 
 @Composable
-fun FilterChips(
+internal fun FilterChips(
     selected: StorageType?,
     onSelect: (StorageType?) -> Unit,
     modifier: Modifier = Modifier,

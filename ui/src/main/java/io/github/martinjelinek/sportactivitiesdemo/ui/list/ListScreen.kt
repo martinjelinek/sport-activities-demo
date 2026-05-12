@@ -51,7 +51,7 @@ import kotlinx.coroutines.flow.StateFlow
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ListScreen(
+internal fun ListScreen(
     onAddClick: () -> Unit,
     savedToSignal: StateFlow<String?>,
     modifier: Modifier = Modifier,

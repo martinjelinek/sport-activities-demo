@@ -25,7 +25,7 @@ import io.github.martinjelinek.sportactivitiesdemo.ui.theme.SportActivitiesDemoT
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ImageCard(
+internal fun ImageCard(
     selected: Boolean,
     painter: Painter,
     contentDescription: String?,

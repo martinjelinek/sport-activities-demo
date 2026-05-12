@@ -16,7 +16,7 @@ import io.github.martinjelinek.sportactivitiesdemo.ui.R
 import io.github.martinjelinek.sportactivitiesdemo.ui.theme.SportActivitiesDemoTheme
 
 @Composable
-fun StorageTypeChip(type: StorageType, modifier: Modifier = Modifier) {
+internal fun StorageTypeChip(type: StorageType, modifier: Modifier = Modifier) {
     val (bg, fg, label) = when (type) {
         StorageType.LOCAL -> Triple(
             MaterialTheme.colorScheme.primaryContainer,

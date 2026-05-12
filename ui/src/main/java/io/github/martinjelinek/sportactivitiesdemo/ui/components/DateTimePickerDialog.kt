@@ -30,13 +30,13 @@ import io.github.martinjelinek.sportactivitiesdemo.ui.R
 import java.util.Calendar
 import java.util.TimeZone
 
-enum class PickerTarget { Started, Ended }
+internal enum class PickerTarget { Started, Ended }
 
-enum class PickerStep { Date, Time }
+private enum class PickerStep { Date, Time }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun DateTimePickerDialog(
+internal fun DateTimePickerDialog(
     initialMillis: Long,
     onConfirm: (Long) -> Unit,
     onDismiss: () -> Unit,

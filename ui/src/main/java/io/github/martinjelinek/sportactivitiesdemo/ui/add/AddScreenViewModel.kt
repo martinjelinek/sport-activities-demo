@@ -18,7 +18,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 @HiltViewModel
-class AddScreenViewModel @Inject constructor(
+internal class AddScreenViewModel @Inject constructor(
     private val repository: SportActivityRepository,
     private val clock: Clock,
     private val idGenerator: IdGenerator,

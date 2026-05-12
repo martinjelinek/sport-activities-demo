@@ -61,7 +61,7 @@ import io.github.martinjelinek.sportactivitiesdemo.util.formatTimestamp
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AddScreen(
+internal fun AddScreen(
     onSaved: (StorageType) -> Unit,
     onNavigateBack: () -> Unit,
     modifier: Modifier = Modifier,

@@ -5,7 +5,7 @@ import javax.inject.Inject
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 
-class LocalDataSource @Inject constructor(
+internal class LocalDataSource @Inject constructor(
     private val dao: SportActivityDao,
 ) {
     fun observe(): Flow<List<SportActivity>> =

@@ -6,6 +6,6 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
-class UuidIdGenerator @Inject constructor() : IdGenerator {
+internal class UuidIdGenerator @Inject constructor() : IdGenerator {
     override fun next(): String = UUID.randomUUID().toString()
 }

@@ -3,7 +3,7 @@ package io.github.martinjelinek.sportactivitiesdemo.ui.add
 import io.github.martinjelinek.sportactivitiesdemo.domain.model.SportType
 import io.github.martinjelinek.sportactivitiesdemo.domain.model.StorageType
 
-data class AddScreenUiState(
+internal data class AddScreenUiState(
     val sport: SportType? = null,
     val location: String = "",
     val startedAt: Long = 0L,
@@ -25,7 +25,7 @@ data class AddScreenUiState(
         get() = startedAt != 0L && endedAt != 0L && endedAt <= startedAt
 }
 
-sealed interface AddScreenEvent {
+internal sealed interface AddScreenEvent {
     data class SportSelected(val value: SportType) : AddScreenEvent
     data class LocationChanged(val value: String) : AddScreenEvent
     data class StartedAtChanged(val value: Long) : AddScreenEvent
@@ -39,6 +39,6 @@ sealed interface AddScreenEvent {
  * Delivered through a [Channel] so each event is consumed
  * exactly once and survives configuration changes.
  */
-sealed interface AddScreenEffect {
+internal sealed interface AddScreenEffect {
     data class Saved(val storage: StorageType) : AddScreenEffect
 }

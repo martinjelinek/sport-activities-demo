@@ -12,13 +12,13 @@ import io.github.martinjelinek.sportactivitiesdemo.domain.model.StorageType
  * so claiming stability via [Stable] is safe.
  */
 @Stable
-data class ListScreenUiState(
+internal data class ListScreenUiState(
     val filter: StorageType? = null,
     val items: List<SportActivity> = emptyList(),
     val isLoading: Boolean = true,
     val errorMessage: String? = null,
 )
 
-sealed interface ListScreenEvent {
+internal sealed interface ListScreenEvent {
     data class FilterSelected(val filter: StorageType?) : ListScreenEvent
 }

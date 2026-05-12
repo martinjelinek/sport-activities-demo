@@ -19,7 +19,7 @@ import kotlinx.coroutines.flow.update
 
 @OptIn(ExperimentalCoroutinesApi::class)
 @HiltViewModel
-class ListScreenViewModel @Inject constructor(
+internal class ListScreenViewModel @Inject constructor(
     private val repository: SportActivityRepository,
 ) : ViewModel() {
 
