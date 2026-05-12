@@ -1,6 +1,6 @@
 # Sport Activities Demo
 
-Android assignment app: record a sport activity (name, location, start/end time, storage destination) and view a list of saved activities filtered by storage.
+Android assignment app: record a sport activity (sport, location, start/end time, storage destination) and view a list of saved activities filtered by storage.
 
 ## Run
 
@@ -34,6 +34,4 @@ Android assignment app: record a sport activity (name, location, start/end time,
 ./gradlew test                                          # unit tests across :domain, :data, :ui
 ./gradlew :ui:connectedDebugAndroidTest                 # one Compose UI test (Add screen)
 ```
-
-## Not implemented
 
